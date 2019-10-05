@@ -1930,6 +1930,12 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -1947,8 +1953,8 @@ __webpack_require__.r(__webpack_exports__);
     subirformulario: function subirformulario(file) {
       file.preventDefault();
       var data = new FormData();
-      var currentObj = this;
-      var file_new = document.getElementById('form_file');
+      var currentObj = this; //let file_new = document.getElementById('form_file');
+
       data.append('xmlfile', document.getElementById('xmlfile').files[0]);
       var settings = {
         headers: {
@@ -1956,8 +1962,8 @@ __webpack_require__.r(__webpack_exports__);
         }
       };
       axios.post('/process', data, settings).then(function (response) {
-        var respuesta = response.data; //console.log(respuesta.status);
-
+        var respuesta = response.data;
+        console.log(respuesta);
         currentObj.snackbar = true;
         currentObj.text = respuesta.msg; //currentObj.Archivo_valor = "Archivo...";
         //currentObj.$emit('update:value',"null");
@@ -1969,6 +1975,27 @@ __webpack_require__.r(__webpack_exports__);
         currentObj.snackbar = true;
         currentObj.text = err;
         console.log(err);
+      });
+    },
+    guardarDB: function guardarDB(formulario) {
+      formulario.preventDefault();
+      var data = new FormData();
+      var currentObj = this;
+      var file_form = document.getElementById('xmlsave');
+      var settings = {
+        headers: {
+          'content-type': 'multipart/form-data'
+        }
+      };
+      data.append('xmlsave', file_form.files[0]);
+      data.append('nombre', file_form.files[0].name);
+      data.append('extension', 'xml');
+      axios.post('/insertar', data, settings).then(function (response) {
+        var rspta = response.data;
+        currentObj.snackbar = true;
+        currentObj.text = rspta.msg;
+      })["catch"](function (error) {
+        console.log(error.message);
       });
     }
   }
@@ -2014,7 +2041,7 @@ exports.push([module.i, "@charset \"UTF-8\";\n/** Ripples */\n/** Elements */\n@
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9":
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css":
 /*!***********************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vuetify/dist/vuetify.min.css ***!
   \***********************************************************************************************************************************/
@@ -3313,13 +3340,14 @@ var render = function() {
                     on: { submit: _vm.subirformulario }
                   },
                   [
+                    _c("v-subheader", [_vm._v("Guardar en Laravel Storage")]),
+                    _vm._v(" "),
                     _c("p", [
                       _c(
                         "label",
                         { attrs: { for: "xmlfile" } },
                         [
                           _c("v-file-input", {
-                            ref: "fileinput",
                             attrs: {
                               placeholder: _vm.Archivo_valor,
                               name: "xmlfile",
@@ -3343,7 +3371,7 @@ var render = function() {
                           form: "form_file"
                         }
                       },
-                      [_vm._v("Cargar!")]
+                      [_vm._v("Cargar")]
                     ),
                     _vm._v(" "),
                     _c(
@@ -3359,7 +3387,11 @@ var render = function() {
                         }
                       },
                       [
-                        _vm._v("\n    " + _vm._s(_vm.text) + "\n    "),
+                        _vm._v(
+                          " \n            " +
+                            _vm._s(_vm.text) +
+                            " \n            "
+                        ),
                         _c(
                           "v-btn",
                           {
@@ -3370,7 +3402,7 @@ var render = function() {
                               }
                             }
                           },
-                          [_vm._v("\n      Close\n    ")]
+                          [_vm._v("Close")]
                         )
                       ],
                       1
@@ -3382,7 +3414,90 @@ var render = function() {
               _vm._v(" "),
               _c("v-flex", { attrs: { md1: "" } }),
               _vm._v(" "),
-              _c("v-flex", { attrs: { md8: "" } })
+              _c(
+                "v-flex",
+                { attrs: { md8: "" } },
+                [
+                  _c("v-subheader", [_vm._v("Guardar en MongoDB ")]),
+                  _vm._v(" "),
+                  _c(
+                    "form",
+                    {
+                      attrs: { name: "mongo_save", id: "mongo_save" },
+                      on: { submit: _vm.guardarDB }
+                    },
+                    [
+                      _c("p", [
+                        _c(
+                          "label",
+                          { attrs: { for: "xmlsave" } },
+                          [
+                            _c("v-file-input", {
+                              attrs: {
+                                placeholder: _vm.Archivo_valor,
+                                name: "xmlsave",
+                                id: "xmlsave"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "v-btn",
+                        {
+                          attrs: {
+                            type: "submit",
+                            id: "guardar",
+                            color: "success",
+                            dark: "",
+                            large: "",
+                            form: "mongo_save"
+                          }
+                        },
+                        [_vm._v("Guardar")]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "v-snackbar",
+                        {
+                          attrs: { "multi-line": _vm.multiLine },
+                          model: {
+                            value: _vm.snackbar,
+                            callback: function($$v) {
+                              _vm.snackbar = $$v
+                            },
+                            expression: "snackbar"
+                          }
+                        },
+                        [
+                          _vm._v(
+                            " \n            " +
+                              _vm._s(_vm.text) +
+                              " \n            "
+                          ),
+                          _c(
+                            "v-btn",
+                            {
+                              attrs: { color: "red", text: "" },
+                              on: {
+                                click: function($event) {
+                                  _vm.snackbar = false
+                                }
+                              }
+                            },
+                            [_vm._v("Close")]
+                          )
+                        ],
+                        1
+                      )
+                    ],
+                    1
+                  )
+                ],
+                1
+              )
             ],
             1
           )
@@ -52530,7 +52645,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_vue__;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9");
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -52896,8 +53011,8 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! D:\Programas\Xampp\htdocs\larafy\resources\js\app.js */"./resources/js/app.js");
-module.exports = __webpack_require__(/*! D:\Programas\Xampp\htdocs\larafy\resources\sass\app.scss */"./resources/sass/app.scss");
+__webpack_require__(/*! D:\Programas\Xampp\htdocs\EditorArquetipos\resources\js\app.js */"./resources/js/app.js");
+module.exports = __webpack_require__(/*! D:\Programas\Xampp\htdocs\EditorArquetipos\resources\sass\app.scss */"./resources/sass/app.scss");
 
 
 /***/ })

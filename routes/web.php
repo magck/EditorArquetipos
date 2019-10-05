@@ -23,5 +23,6 @@ Route::get('edit/{id}','CarController@edit');
 Route::post('edit/{id}','CarController@update');
 Route::delete('{id}','CarController@destroy');*/
 Route::post('process','fileController@guardar');
+Route::post('insertar','fileController@save_mongo');
 Route::get('pruebaxml','xmlController@index');//este es de pruebas  para xml luego borrar
 ?>
