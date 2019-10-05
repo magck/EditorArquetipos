@@ -9,11 +9,10 @@ use Illuminate\Support\Facades\File;
 
 class fileController extends Controller
 {
-    function index ()
-    {
+    function index (){
         return view('importarArquetipo');
-        
     }
+    
     //funcion para guardar en mongoDB
     function save_mongo(Request $request){
         $datos = new fileObject();

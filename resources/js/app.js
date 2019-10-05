@@ -9,6 +9,7 @@ Vue.use(Vuetify);
 Vue.component('example-component', require('./components/barra_navComponent.vue').default);
 Vue.component('homepage-component', require('./components/homepageComponent.vue').default);
 Vue.component('editor-component', require('./components/editorComponent.vue').default);
+Vue.component('crear-component',require('./components/crearComponent.vue').default);
 const app = new Vue({
     el: '#app',
     vuetify: new Vuetify(),

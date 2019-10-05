@@ -22,6 +22,7 @@
         <v-btn icon> <v-icon>mdi-magnify</v-icon> </v-btn>
         <v-btn icon> <v-icon>mdi-dots-vertical</v-icon></v-btn>
       </v-toolbar>
+
 </template>
 
 <script>
@@ -30,7 +31,7 @@
         data: () => ({
       list : 0,
       items: [
-        { title: 'Crear Arquetipo' ,urls:'/crear'},
+        { title: 'Crear Arquetipo' ,urls:'/crearArquetipo'},
         { title: 'Importar Arquetipo',urls:'/importar' },
       ],
     }),
