@@ -11,5 +11,9 @@ const mix = require('laravel-mix');
  |
  */
 
+
 mix.js('resources/js/app.js', 'public/js')
-   .sass('resources/sass/app.scss', 'public/css');
+   .sass('resources/sass/app.scss', 'public/css')
+   .scripts(['node_modules/jsmind/js/jsmind.js',
+   'node_modules/jsmind/js/jsmind.draggable.js',
+   'node_modules/jsmind/js/jsmind.screenshot.js'],'public/js/jsmind.js')

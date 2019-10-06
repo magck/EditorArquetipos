@@ -1,8 +1,13 @@
 import Vue from 'vue';
 import axios from 'axios';
 import Vuetify from 'vuetify';
+import jsmind from 'jsmind';
+//import jsmind from '../../public/js/jsmind';
 window.Vue = require('vue');
+//import '../../node_modules/jsmind/style/jsmind.css';
+//import '../../node_modules/jsmind/js/jsmind.draggable.js';
 window.axios = axios;
+window.jsMind = jsmind;
 import "../../node_modules/vuetify/dist/vuetify.min.css"
 Vue.use(Vuetify);
 //Vue.config.productionTip = false
@@ -14,4 +19,4 @@ const app = new Vue({
     el: '#app',
     vuetify: new Vuetify(),
 })
-  
+

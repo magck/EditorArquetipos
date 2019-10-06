@@ -7,11 +7,22 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Editor De Arquetipos</title>
-        <link href="{{asset('css/app.css')}}" rel="stylesheet"> 
-        <link href="{{asset('bootstrap.js')}}" rel="stylesheet">
+        <style type="text/css">
+            #jsmind_container{
+                width:800px;
+                height:500px;
+                border:solid 1px #ccc;
+                /*background:#f4f4f4;*/
+                background:#f4f4f4;
+            }
+        </style>
+        <!--<link type="text/css" rel="stylesheet" href="sass/jsmind.css">
+        <script src="js/jsmind.js"></script>-->
+        <link href="{{asset('css/app.css')}}" rel="stylesheet">
+        <!--<link href="../../node_modules/jsmind/style/jsmind.css" rel="stylesheet">-->
+        <!--<link href="{{asset('bootstrap.js')}}" rel="stylesheet">-->
     </head>
     <body>
-
             <div id="app">
               <example-component></example-component>
               <crear-component></crear-component>

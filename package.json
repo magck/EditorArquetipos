@@ -24,6 +24,7 @@
         "vue-style-loader": "^1.0.0"
     },
     "dependencies": {
+        "jsmind": "^0.4.6",
         "vuetify": "^2.0.15"
     }
 }

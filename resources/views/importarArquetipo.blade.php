@@ -17,5 +17,6 @@
               <editor-component></editor-component>
             </div>
             <script src="{{asset('js/app.js')}}"></script> <!--Añadimos el js generado con webpack, donde se encuentra nuestro componente vuejs-->
-    </body>
+            <script src="{{asset('js/jsmind.js')}}" ></script>
+          </body>
 </html>
