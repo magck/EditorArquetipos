@@ -1,9 +1,14 @@
-# Editor Arquetipos
+# Proyecto Integracion IV
 
-#Requisitos
-En Windows : Composer, Laravel, Nodejs, conexion a internet.
-Linux:
+Proyecto de desarrollo para el curso de taller de integración 4
 
+# Requisitos
+# Windows:
+* Node js 10.15.3
+* Laravel 6.0.1
+* composer 1.9.0
+* Conexion a Internet
+# linux
 
 # Instalación 
 
