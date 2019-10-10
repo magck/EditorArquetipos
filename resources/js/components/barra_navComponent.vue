@@ -26,7 +26,6 @@
 </template>
 
 <script>
-  import '../app.js';
     export default { 
         data: () => ({
       list : 0,
