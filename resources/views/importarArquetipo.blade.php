@@ -9,9 +9,17 @@
         <title>Editor De Arquetipos</title>
         <link href="{{asset('css/app.css')}}" rel="stylesheet"> 
         <link href="{{asset('bootstrap.js')}}" rel="stylesheet">
+        <style type="text/css">
+            #jsmind_container{
+                width:800px;
+                height:500px;
+                border:solid 1px #ccc;
+                /*background:#f4f4f4;*/
+                background:#f4f4f4;
+            }
+        </style>
     </head>
     <body>
-
             <div id="app">
               <example-component></example-component>
               <editor-component></editor-component>

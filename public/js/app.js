@@ -1838,7 +1838,6 @@ module.exports = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _app_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../app.js */ "./resources/js/app.js");
 //
 //
 //
@@ -1866,7 +1865,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2018,6 +2016,24 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2025,11 +2041,22 @@ __webpack_require__.r(__webpack_exports__);
       salida: '',
       snackbar: false,
       multiLine: true,
-      text: ''
+      text: '',
+      nodo: {
+        "id": "root",
+        "parentid": "",
+        "isroot": true,
+        "topic": "jsMind",
+        "background-color": "#0000ff",
+        "direction": ""
+      }
     };
   },
-  mounted: function mounted() {
-    console.log("Componente carga archivo montado");
+  mounted: function mounted() {// jm.set_readonly(true);
+    // var mind_data = jm.get_data();
+    // alert(mind_data);
+    //jm.add_node("sub2","sub23", "new node", {"background-color":"red"});
+    //jm.set_node_color('sub21', 'green', '#ccc');
   },
   methods: {
     subirformulario: function subirformulario(file) {
@@ -2079,6 +2106,46 @@ __webpack_require__.r(__webpack_exports__);
       })["catch"](function (error) {
         console.log(error.message);
       });
+    },
+    procesarArquetipo: function procesarArquetipo(formulario) {
+      formulario.preventDefault();
+      var data = new FormData();
+      var currentObj = this;
+      var archv_formulario = document.getElementById('xmlfile_load');
+      var settings = {
+        headers: {
+          'content-type': 'multipart/form-data'
+        }
+      };
+      data.append('archivo_xml', archv_formulario.files[0]);
+      data.append('nombre_xml', archv_formulario.files[0].name);
+      axios.post('/procesar_xml', data, settings).then(function (response) {
+        var rspta = response.data;
+        currentObj.snackbar = true;
+        currentObj.text = rspta.msg;
+        var nodos_jsmind = rspta.nodos;
+        var mind = {
+          "meta": {
+            "name": "archetype",
+            "author": "editor_importe",
+            "version": "0.1"
+          },
+          "format": "node_array",
+          "data": [nodos_jsmind]
+        };
+        var options = {
+          container: 'jsmind_container',
+          editable: true,
+          theme: 'primary'
+        };
+        var jm = jsMind.show(options, mind);
+        console.log(rspta.nodos);
+      })["catch"](function (error) {
+        console.log(error.message);
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      });
     }
   }
 });
@@ -2123,7 +2190,7 @@ exports.push([module.i, "@charset \"UTF-8\";\n/** Ripples */\n/** Elements */\n@
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9":
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css":
 /*!***********************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vuetify/dist/vuetify.min.css ***!
   \***********************************************************************************************************************************/
@@ -6369,92 +6436,88 @@ var render = function() {
             "v-layout",
             { attrs: { row: "" } },
             [
-              _c("v-flex", { attrs: { md3: "" } }, [
-                _c(
-                  "form",
-                  {
-                    attrs: { name: "form_file", id: "form_file" },
-                    on: { submit: _vm.subirformulario }
-                  },
-                  [
-                    _c("v-subheader", [_vm._v("Guardar en Laravel Storage")]),
-                    _vm._v(" "),
-                    _c("p", [
+              _c(
+                "v-flex",
+                { attrs: { md3: "" } },
+                [
+                  _c(
+                    "form",
+                    {
+                      attrs: { name: "form_file", id: "form_file" },
+                      on: { submit: _vm.subirformulario }
+                    },
+                    [
+                      _c("v-subheader", [_vm._v("Cargar Arquetipo desde PC")]),
+                      _vm._v(" "),
+                      _c("p", [
+                        _c(
+                          "label",
+                          { attrs: { for: "xmlfile" } },
+                          [
+                            _c("v-file-input", {
+                              attrs: {
+                                placeholder: _vm.Archivo_valor,
+                                name: "xmlfile",
+                                id: "xmlfile"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
                       _c(
-                        "label",
-                        { attrs: { for: "xmlfile" } },
+                        "v-btn",
+                        {
+                          attrs: {
+                            type: "submit",
+                            id: "upload",
+                            color: "success",
+                            dark: "",
+                            large: "",
+                            form: "form_file"
+                          }
+                        },
+                        [_vm._v("Cargar")]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "v-snackbar",
+                        {
+                          attrs: { "multi-line": _vm.multiLine },
+                          model: {
+                            value: _vm.snackbar,
+                            callback: function($$v) {
+                              _vm.snackbar = $$v
+                            },
+                            expression: "snackbar"
+                          }
+                        },
                         [
-                          _c("v-file-input", {
-                            attrs: {
-                              placeholder: _vm.Archivo_valor,
-                              name: "xmlfile",
-                              id: "xmlfile"
-                            }
-                          })
+                          _vm._v(
+                            " \n            " +
+                              _vm._s(_vm.text) +
+                              " \n            "
+                          ),
+                          _c(
+                            "v-btn",
+                            {
+                              attrs: { color: "red", text: "" },
+                              on: {
+                                click: function($event) {
+                                  _vm.snackbar = false
+                                }
+                              }
+                            },
+                            [_vm._v("Close")]
+                          )
                         ],
                         1
                       )
-                    ]),
-                    _vm._v(" "),
-                    _c(
-                      "v-btn",
-                      {
-                        attrs: {
-                          type: "submit",
-                          id: "upload",
-                          color: "success",
-                          dark: "",
-                          large: "",
-                          form: "form_file"
-                        }
-                      },
-                      [_vm._v("Cargar")]
-                    ),
-                    _vm._v(" "),
-                    _c(
-                      "v-snackbar",
-                      {
-                        attrs: { "multi-line": _vm.multiLine },
-                        model: {
-                          value: _vm.snackbar,
-                          callback: function($$v) {
-                            _vm.snackbar = $$v
-                          },
-                          expression: "snackbar"
-                        }
-                      },
-                      [
-                        _vm._v(
-                          " \n            " +
-                            _vm._s(_vm.text) +
-                            " \n            "
-                        ),
-                        _c(
-                          "v-btn",
-                          {
-                            attrs: { color: "red", text: "" },
-                            on: {
-                              click: function($event) {
-                                _vm.snackbar = false
-                              }
-                            }
-                          },
-                          [_vm._v("Close")]
-                        )
-                      ],
-                      1
-                    )
-                  ],
-                  1
-                )
-              ]),
-              _vm._v(" "),
-              _c("v-flex", { attrs: { md1: "" } }),
-              _vm._v(" "),
-              _c(
-                "v-flex",
-                { attrs: { md8: "" } },
-                [
+                    ],
+                    1
+                  ),
+                  _vm._v(" "),
                   _c("v-subheader", [_vm._v("Guardar en MongoDB ")]),
                   _vm._v(" "),
                   _c(
@@ -6531,10 +6594,94 @@ var render = function() {
                       )
                     ],
                     1
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "form",
+                    {
+                      attrs: { name: "form_file_load", id: "form_file_load" },
+                      on: { submit: _vm.procesarArquetipo }
+                    },
+                    [
+                      _c("v-subheader", [_vm._v("Cargar Arquetipo desde PC")]),
+                      _vm._v(" "),
+                      _c("p", [
+                        _c(
+                          "label",
+                          { attrs: { for: "xmlfile_load" } },
+                          [
+                            _c("v-file-input", {
+                              attrs: {
+                                placeholder: _vm.Archivo_valor,
+                                name: "xmlfile_load",
+                                id: "xmlfile_load"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "v-btn",
+                        {
+                          attrs: {
+                            type: "submit",
+                            id: "procesa",
+                            color: "success",
+                            dark: "",
+                            large: "",
+                            form: "form_file_load"
+                          }
+                        },
+                        [_vm._v("Procesar")]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "v-snackbar",
+                        {
+                          attrs: { "multi-line": _vm.multiLine },
+                          model: {
+                            value: _vm.snackbar,
+                            callback: function($$v) {
+                              _vm.snackbar = $$v
+                            },
+                            expression: "snackbar"
+                          }
+                        },
+                        [
+                          _vm._v(
+                            " \n            " +
+                              _vm._s(_vm.text) +
+                              " \n            "
+                          ),
+                          _c(
+                            "v-btn",
+                            {
+                              attrs: { color: "red", text: "" },
+                              on: {
+                                click: function($event) {
+                                  _vm.snackbar = false
+                                }
+                              }
+                            },
+                            [_vm._v("Close")]
+                          )
+                        ],
+                        1
+                      )
+                    ],
+                    1
                   )
                 ],
                 1
-              )
+              ),
+              _vm._v(" "),
+              _c("v-flex", { attrs: { md1: "" } }),
+              _vm._v(" "),
+              _c("v-flex", { attrs: { md8: "" } }, [
+                _c("div", { attrs: { id: "jsmind_container" } })
+              ])
             ],
             1
           )
@@ -55682,7 +55829,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_vue__;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9");
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 

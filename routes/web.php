@@ -20,6 +20,7 @@ Route::get('crearArquetipo','crearController@index');
 Route::post('process','fileController@guardar');
 Route::post('insertar','fileController@save_mongo');
 Route::get('pruebaxml','xmlController@index');//este es de pruebas  para xml luego borrar
+Route::post('procesar_xml','fileController@procesar');
 /*Route::get('add','CarController@create');
 Route::post('add','CarController@store');
 Route::get('car','CarController@index');
