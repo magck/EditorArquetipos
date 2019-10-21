@@ -128,23 +128,46 @@ class fileController extends Controller
                     $indice = $indice +1;
                 }
             }
+            $aData1 = array_values($aData1);
+            $aData = array_values($aData);
             
             return response()->json([
-                'nodos' =>$this->crear_nodo("root","",true,"Respuesta desde Servidor","#0000ff",""),
+                'padre' => $this->crear_nodo("root","","",$aData1[0],"#0000ff","",""),
+                'hijos' =>$this->crear_nodo("hijo","","",$aData1[1],"#0000ff","right",""),
+                'nodos' =>$this->array_to_node($aData),
                 'status' => 'good',
                 'msg' => 'Archivo procesado con exito',
             ],201);
+
+
         }else{
             return response()->json([
-                'nodos' =>'crear_nodo("root","",true,"Gender","#0000ff","")',
                 'status' => 'error',
                 'msg' => 'Archivo no encontrado',
             ],201);
         }
 
     }
-    function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction){
-        return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction);
+    function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction,$children){
+        return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction,'children'=>$children);
+    }
+    //funcion para pasar a string los nodos desde un PHP array
+    function array_to_node($aData){
+        $json_sender = array();
+        $string_f = (string) NULL; 
+        foreach ($aData as $keyq => $valueq) {
+            $llave = (string) $keyq;
+            $valor = (string) $valueq;
+            array_push($json_sender,json_encode(array('id'=>'"'.$keyq.'"',"topic"=>$valueq)));
+        }
+        for ($i=0; $i < count($json_sender); $i++) { 
+            if($i != 0){
+                $string_f.=",".$json_sender[$i];
+            }else{
+                $string_f = "{". '"data"'.":"."[".$json_sender[$i];
+            }
+        }
+        return $string_f."]"."}";
     }
     // funcion para guardar el archivo xml en el storage
     function guardar (Request $request) {

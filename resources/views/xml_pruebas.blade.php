@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/5.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/1.xml") or die("Error al cargar el xml");
 
     function buscar_item($padre,$idioma,$concepto){
         foreach($padre as $key=>$nodo)
@@ -128,7 +128,8 @@
         }
     }
 
-
+    $aData1 = array_values($aData1);
+    $aData = array_values($aData);
     print "<pre>";
     print_r($arreglo_nodos);
     print "</pre>";
@@ -150,43 +151,39 @@
     print "</pre>";
     print "\n";
     function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction){
-        return json_encode(array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction));
+        return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction);
     }
     $meta=array('name'=>'archetype','author'=>'editor_import',"version"=>'0.1'); 
     //$data= array("id"=>"root","isroot"=>true,"topic"=>"Gender");
     //$data2 = array("id"=>"sub1","parentid"=>"root","Topic"=>"Data","background-color"=>"#0000ff");
-    echo crear_nodo("root","",true,"Gender","#0000ff","");
+   //echo crear_nodo("root","",true,"Gender","#0000ff",""). ",".crear_nodo("root","",true,"Gender","#0000ff","");
+    //$json_sender = json_encode(array_values($aData));
 
-    echo json_encode($meta);
-
-    //echo json_encode($data2);
-    /*
-    var mind = {
-        "meta":{
-            "name":"archetype",
-            "author":"editor_importe",
-            "version":"0.1",
-        },
-        "format":"node_array",
-        "data":[
-            {"id":"root", "isroot":true, "topic":"Gender"},
-
-            {"id":"sub1", "parentid":"root", "topic":"data", "background-color":"#0000ff"},
-            {"id":"sub11", "parentid":"sub1", "topic":"Administrative Gender"},
-            {"id":"sub12", "parentid":"sub1", "topic":"Legal Gender"},
-            {"id":"sub13", "parentid":"sub1", "topic":"Sex assigned at birth"},
-            {"id":"sub14", "parentid":"sub1","topic":"Gender Expression"},
-            {"id":"sub15", "parentid":"sub1","topic":"Gender Identity"},
-            {"id":"sub16", "parentid":"sub1","topic":"Preferred pronoun"},
-            {"id":"sub17", "parentid":"sub1","topic":"Aditional Details"},
-            {"id":"sub18", "parentid":"sub1","topic":"Comment"},
-
-            {"id":"sub19", "parentid":"root","topic":"Protocol","direction":"left"},
-            {"id":"sub20", "parentid":"sub19","topic":"Last Updated"},
-            {"id":"sub21", "parentid":"sub19","topic":"extension"},
-
-            {"id":"sub22", "parentid":"sub19", "topic":"sub22","foreground-color":"#33ff33"},
-
-        ]
+    //echo array_to_node($aData);     
+    function array_to_node($aData){
+        $json_sender = array();
+        $string_f = (string) NULL; 
+        foreach ($aData as $keyq => $valueq) {
+            $llave = (string) $keyq;
+            $valor = (string) $valueq;
+            array_push($json_sender,json_encode(array('id'=>$keyq,"topic"=>$valueq)));
+        }
+        for ($i=0; $i < count($json_sender); $i++) { 
+            if($i != 0){
+                $string_f.=",".$json_sender[$i];
+            }else{
+                $string_f = "{". '"data"'.":"."[".$json_sender[$i];
+            }
+        }
+        return $string_f."]"."}";
     }
-    */
+
+
+/*
+{"id":"easy","topic":"Easy","direction":"left","children":[
+            {"id":"easy1","topic":"Easy to show"},
+            {"id":"easy2","topic":"Easy to edit"},
+            {"id":"easy3","topic":"Easy to store"},
+            {"id":"easy4","topic":"Easy to embed"}
+        ]}
+*/

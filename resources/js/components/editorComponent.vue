@@ -73,15 +73,43 @@ export default {
             nodo: {"id":"root","parentid":"","isroot":true,"topic":"jsMind","background-color":"#0000ff","direction":""}
         }
     },
-    mounted(){
-
-
-        // jm.set_readonly(true);
-        // var mind_data = jm.get_data();
-        // alert(mind_data);
-        //jm.add_node("sub2","sub23", "new node", {"background-color":"red"});
-        //jm.set_node_color('sub21', 'green', '#ccc');
+     /*  mounted(){
+     var mind = {
+    "meta":{
+        "name":"jsMind remote",
+        "author":"hizzgdev@163.com",
+        "version":"0.2"
     },
+    "format":"node_tree",
+    "data":{"id":"root","topic":"jsMind","children":[
+        {"id":"easy","topic":"Easy","direction":"left","children":[
+            {"id":"easy1","topic":"Easy to show"},
+            {"id":"easy2","topic":"Easy to edit"},
+            {"id":"easy3","topic":"Easy to store"},
+            {"id":"easy4","topic":"Easy to embed"}
+        ]},
+        {"id":"open","topic":"Open Source","direction":"right","children":[
+            {"id":"open1","topic":"on GitHub"},
+            {"id":"open2","topic":"BSD License"}
+        ]},
+        {"id":"powerful","topic":"Powerful","direction":"right","children":[
+            {"id":"powerful1","topic":"Base on Javascript"},
+            {"id":"powerful2","topic":"Base on HTML5"},
+            {"id":"powerful3","topic":"Depends on you"}
+        ]},
+        {"id":"other","topic":"test node","direction":"left","children":[
+            {"id":"other1","topic":"I'm from local variable"},
+            {"id":"other2","topic":"I can do everything"}
+        ]}
+    ]}
+};
+                var options = {
+                    container:'jsmind_container',
+                    editable:true,
+                    theme:'primary'
+                }
+                var jm = jsMind.show(options,mind);
+    },*/
     methods:{
         subirformulario(file){
             file.preventDefault();
@@ -145,23 +173,37 @@ export default {
                 let rspta = response.data;
                 currentObj.snackbar = true;
                 currentObj.text = rspta.msg;
+                let padre_jsmind = rspta.padre
+                let hijos = rspta.hijos
                 let nodos_jsmind = rspta.nodos
+                let JSON_objs = JSON.parse(nodos_jsmind);
+                let nodos_hijo = [];
+
+                for (let index = 0; index < JSON_objs.data.length; index++) {
+                    nodos_hijo.push(JSON_objs.data[index]);
+
+                }
+
+                hijos.children = nodos_hijo;
+                padre_jsmind.children = [hijos];
+
                 var mind = {
                     "meta":{
                         "name":"archetype",
                         "author":"editor_importe",
                         "version":"0.1",
                     },
-                    "format":"node_array",
-                    "data":[nodos_jsmind]
+                    "format":"node_tree",
+                        "data":padre_jsmind
                 };
+                
                 var options = {
                     container:'jsmind_container',
                     editable:true,
                     theme:'primary'
                 }
                 var jm = jsMind.show(options,mind);
-                console.log(rspta.nodos);
+
             })
             .catch(function (error) {
                 console.log(error.message);
