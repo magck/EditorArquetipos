@@ -4,13 +4,13 @@
             <v-layout row>
             <v-flex md3>
             <form @submit="subirformulario" name="form_file" id="form_file" >
-            <v-subheader>Cargar Arquetipo desde PC</v-subheader>
+            <v-subheader>Guardar Arquetipo en PC</v-subheader>
             <p>
                 <label for="xmlfile">
                 <v-file-input :placeholder="Archivo_valor" name="xmlfile" id="xmlfile"></v-file-input>
                 </label>
             </p>
-            <v-btn type="submit" id='upload' color="success" dark large form="form_file" >Cargar</v-btn>
+            <v-btn type="submit" id='upload' color="success" dark large form="form_file" >Guardar</v-btn>
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
@@ -42,6 +42,7 @@
                 </label>
             </p>
             <v-btn type="submit" id='procesa' color="success" dark large form="form_file_load">Procesar</v-btn>
+            <v-btn color="success" dark large v-on:click="exportar">Exportar Data</v-btn>
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
@@ -70,7 +71,8 @@ export default {
             snackbar:false,
             multiLine: true,
             text: '',
-            nodo: {"id":"root","parentid":"","isroot":true,"topic":"jsMind","background-color":"#0000ff","direction":""}
+            data: '',
+            nombre_arch_expor: '',
         }
     },
      /*  mounted(){
@@ -164,8 +166,10 @@ export default {
             formulario.preventDefault();
             let data = new FormData();
             let currentObj = this;
+
             let archv_formulario = document.getElementById('xmlfile_load');
             let settings = { headers: { 'content-type': 'multipart/form-data' } };
+            currentObj.nombre_arch_expor = archv_formulario.files[0].name
             data.append('archivo_xml',archv_formulario.files[0]);
             data.append('nombre_xml',archv_formulario.files[0].name);
             axios.post('/procesar_xml',data,settings)
@@ -174,6 +178,7 @@ export default {
                 currentObj.snackbar = true;
                 currentObj.text = rspta.msg;
                 let padre_jsmind = rspta.padre
+                /*
                 let hijos = rspta.hijos
                 let nodos_jsmind = rspta.nodos
                 let JSON_objs = JSON.parse(nodos_jsmind);
@@ -181,28 +186,21 @@ export default {
 
                 for (let index = 0; index < JSON_objs.data.length; index++) {
                     nodos_hijo.push(JSON_objs.data[index]);
-
                 }
 
                 hijos.children = nodos_hijo;
                 padre_jsmind.children = [hijos];
-
-                var mind = {
-                    "meta":{
-                        "name":"archetype",
-                        "author":"editor_importe",
-                        "version":"0.1",
-                    },
-                    "format":"node_tree",
-                        "data":padre_jsmind
-                };
+                */                    
+                var mind = JSON.parse(padre_jsmind);
                 
                 var options = {
                     container:'jsmind_container',
                     editable:true,
                     theme:'primary'
                 }
+                currentObj.data = mind
                 var jm = jsMind.show(options,mind);
+
 
             })
             .catch(function (error) {
@@ -212,6 +210,21 @@ export default {
                 console.log(error.response.headers);
             })            
 
+        },
+        exportar(formulario){
+            formulario.preventDefault();
+            let currentObj = this
+            var datos_exportar = currentObj.data
+            var nombre_arquetipo = currentObj.nombre_arch_expor
+            var exportObj = datos_exportar
+            var exportName= nombre_arquetipo+"data"
+            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+            var downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href",     dataStr);
+            downloadAnchorNode.setAttribute("download", exportName + ".json");
+            document.body.appendChild(downloadAnchorNode); // required for firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
         },
     }
 }

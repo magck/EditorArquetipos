@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/1.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/5.xml") or die("Error al cargar el xml");
 
     function buscar_item($padre,$idioma,$concepto){
         foreach($padre as $key=>$nodo)
@@ -131,10 +131,6 @@
     $aData1 = array_values($aData1);
     $aData = array_values($aData);
     print "<pre>";
-    print_r($arreglo_nodos);
-    print "</pre>";
-    print "\n";
-    print "<pre>";
     print_r($aData);
     print "</pre>";
     print "\n";
@@ -142,48 +138,69 @@
     print_r($aData1);
     print "</pre>";
     print "\n";
-    print "<pre>";
-    //print_r($busca_attribute_name);
-    print "</pre>";
-    print "\n";
-    print "<pre>";
-    //print_r($code_list);
-    print "</pre>";
-    print "\n";
+
+
     function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction){
         return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction);
     }
     $meta=array('name'=>'archetype','author'=>'editor_import',"version"=>'0.1'); 
-    //$data= array("id"=>"root","isroot"=>true,"topic"=>"Gender");
-    //$data2 = array("id"=>"sub1","parentid"=>"root","Topic"=>"Data","background-color"=>"#0000ff");
-   //echo crear_nodo("root","",true,"Gender","#0000ff",""). ",".crear_nodo("root","",true,"Gender","#0000ff","");
-    //$json_sender = json_encode(array_values($aData));
 
-    //echo array_to_node($aData);     
-    function array_to_node($aData){
+    function crear_meta_jsmind($nombre,$autor,$version){
+        $string_head = '"meta":{
+            "name":"'.$nombre.'",
+            "author":"'.$autor.'",
+            "version":"'.$version.'"
+        },';
+        return $string_head;
+    }
+    function crear_format_jsmind($formato){
+        $string_format = '"format":"'.$formato.'",';
+        return $string_format;
+    }
+ 
+    crear_mind_jsmind($aData,$aData1);
+
+    function crear_mind_jsmind($aData,$aData1){
+        $meta = crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = crear_format_jsmind("node_tree");
+        $hijos = crear_data_hijos_jsmind($aData,$aData1,"right");
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
+    }
+
+    function crear_data_hijos_jsmind($hijos,$padres,$dir){ //funcion que crea los hijos de root (jsmind)
         $json_sender = array();
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
-        foreach ($aData as $keyq => $valueq) {
+        foreach ($hijos as $keyq => $valueq) {
             $llave = (string) $keyq;
             $valor = (string) $valueq;
-            array_push($json_sender,json_encode(array('id'=>$keyq,"topic"=>$valueq)));
+            array_push($json_sender,json_encode(array('id'=>'"'.$keyq.'"',"topic"=>$valueq)));
         }
-        for ($i=0; $i < count($json_sender); $i++) { 
-            if($i != 0){
-                $string_f.=",".$json_sender[$i];
-            }else{
-                $string_f = "{". '"data"'.":"."[".$json_sender[$i];
+        $padres_split = array_chunk($padres, 1);
+        unset($padres_split[0]);
+        $string_elem_padre = (string) NULL;
+        foreach($padres_split as $keya => $valuea){
+            $elemento = '"'.$valuea[0].'"';
+            $id_padre = '"'.$keya.'"';
+            if($valuea[0] == 'data'){
+                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender[$i];
+                    }
+                }
+                $string_elem_padre .= $string_f."]},";
+            }
+            else{
+                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'","children":""}]}';
             }
         }
-        return $string_f."]"."}";
+        $string_nodo_root .= $string_elem_padre;
+        return $string_nodo_root;
     }
 
 
-/*
-{"id":"easy","topic":"Easy","direction":"left","children":[
-            {"id":"easy1","topic":"Easy to show"},
-            {"id":"easy2","topic":"Easy to edit"},
-            {"id":"easy3","topic":"Easy to store"},
-            {"id":"easy4","topic":"Easy to embed"}
-        ]}
-*/

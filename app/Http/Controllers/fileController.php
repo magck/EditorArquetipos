@@ -36,13 +36,6 @@ class fileController extends Controller
         $validation = $request->validate(['archivo_xml' => 'required|file|mimes:xml,adl|max:2048']);//2mb
         $file = $validation['archivo_xml'];
         $xml = simplexml_load_file($file);
-        /*"../../../storage/app/xml_imports/5.xml"
-                    return response()->json([
-                'status' => 'exito',
-                'msg' => 'Archivo leido en XML.',
-                'cod' => '201',
-            ], 201); 
-         */
         if($xml != False){ //simple_xml_load retorna el obj xml o falso en caso de error; si el archivo fue recibido crrectamente
             $concept = (string) $this->parser($xml)->xpath('//a:concept')[0];//Concept es de donde parten (nodo padre)
             $busca = $this->parser($xml)->xpath('//a:node_id'); //Retorna un array de objetos SimpleXMLElement o FALSE en caso de error. 
@@ -130,11 +123,9 @@ class fileController extends Controller
             }
             $aData1 = array_values($aData1);
             $aData = array_values($aData);
-            
+            $json_mind = $this->crear_mind_jsmind($aData,$aData1);
             return response()->json([
-                'padre' => $this->crear_nodo("root","","",$aData1[0],"#0000ff","",""),
-                'hijos' =>$this->crear_nodo("hijo","","",$aData1[1],"#0000ff","right",""),
-                'nodos' =>$this->array_to_node($aData),
+                'padre' => $json_mind,
                 'status' => 'good',
                 'msg' => 'Archivo procesado con exito',
             ],201);
@@ -148,27 +139,62 @@ class fileController extends Controller
         }
 
     }
-    function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction,$children){
-        return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction,'children'=>$children);
+
+    function crear_mind_jsmind($aData,$aData1){
+        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = $this->crear_format_jsmind("node_tree");
+        $hijos = $this->crear_data_hijos_jsmind($aData,$aData1,"right");
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
     }
-    //funcion para pasar a string los nodos desde un PHP array
-    function array_to_node($aData){
+    function crear_format_jsmind($formato){
+        $string_format = '"format":"'.$formato.'",';
+        return $string_format;
+    }
+    function crear_meta_jsmind($nombre,$autor,$version){
+        $string_head = '"meta":{
+            "name":"'.$nombre.'",
+            "author":"'.$autor.'",
+            "version":"'.$version.'"
+        },';
+        return $string_head;
+    }
+
+    function crear_data_hijos_jsmind($hijos,$padres,$dir){ //funcion que crea los hijos de root (jsmind)
         $json_sender = array();
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
-        foreach ($aData as $keyq => $valueq) {
+        foreach ($hijos as $keyq => $valueq) {
             $llave = (string) $keyq;
             $valor = (string) $valueq;
             array_push($json_sender,json_encode(array('id'=>'"'.$keyq.'"',"topic"=>$valueq)));
         }
-        for ($i=0; $i < count($json_sender); $i++) { 
-            if($i != 0){
-                $string_f.=",".$json_sender[$i];
-            }else{
-                $string_f = "{". '"data"'.":"."[".$json_sender[$i];
+        $padres_split = array_chunk($padres, 1);
+        unset($padres_split[0]);
+        $string_elem_padre = (string) NULL;
+        foreach($padres_split as $keya => $valuea){
+            $elemento = '"'.$valuea[0].'"';
+            $id_padre = '"'.$keya.'"';
+            if($valuea[0] == 'data'){
+                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender[$i];
+                    }
+                }
+                $string_elem_padre .= $string_f."]},";
+            }
+            else{
+                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'","children":""}]}';
             }
         }
-        return $string_f."]"."}";
+        $string_nodo_root .= $string_elem_padre;
+        return $string_nodo_root;
     }
+
     // funcion para guardar el archivo xml en el storage
     function guardar (Request $request) {
         #$request->xmlfile->store('xml_imp');
@@ -265,9 +291,4 @@ class fileController extends Controller
         }
         return array($arreglo_items_code,$arreglo_item_tree);
     }
-
-
-
-
-
 }
