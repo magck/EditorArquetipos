@@ -1,6 +1,30 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/diagnosis.xml") or die("Error al cargar el xml");
-
+    $xml = simplexml_load_file("../storage/app/xml_imports/gender.xml") or die("Error al cargar el xml");
+    function crear_meta_jsmind($nombre,$autor,$version){
+        $string_head = '"meta":{
+            "name":"'.$nombre.'",
+            "author":"'.$autor.'",
+            "version":"'.$version.'"
+        },';
+        return $string_head;
+    }
+    function array_values_recursive($arr){
+        $arr2=[];
+        foreach ($arr as $key => $value)
+        {
+            if(is_array($value))
+            {            
+                $arr2[] = array_values_recursive($value);
+            }else{
+                $arr2[] =  $value;
+            }
+        }
+        return $arr2;
+    }
+    function crear_format_jsmind($formato){
+        $string_format = '"format":"'.$formato.'",';
+        return $string_format;
+    }
     function buscar_item($padre,$idioma,$concepto){
         foreach($padre as $key=>$nodo)
         {
@@ -43,38 +67,12 @@
         }
         return $xml;
     }
-    function buscar_item2($padre,$idioma,$concepto){
-        foreach($padre as $key=>$nodo)
-        {
-            switch ((string) $nodo['language']) {
-                case $idioma:
-                    $mykey = $key;
-            }  
-        }
-        $tmp = $padre[$mykey]->items;
-        $arreglo_items_code = array(); 
-        $arreglo_item_tree = array();
-        for ($i=0; $i < count($tmp); $i++) { 
-            $descripcion = (string)$padre[$mykey]->items[$i]->items[1];
-            $codigo = (string)$padre[$mykey]->items[$i]['code'];
-            if($descripcion != "@ internal @"){ //Aqui hacemos un filtro de los items
-                $item = (string)$padre[$mykey]->items[$i]->items[0];
-                $arreglo_items_code[$codigo] = $item;
-            }else{
-                $item = (string)$padre[$mykey]->items[$i]->items[0];
-                $arreglo_item_tree[$codigo] = $item;
-            }
-            if($codigo == $concepto){
-                $item = (string)$padre[$mykey]->items[$i]->items[0];
-                $arreglo_item_tree[$codigo] = $item;
-            }
-            foreach($arreglo_items_code as $clave => $valor){
-                if($concepto == $clave){
-                    unset($arreglo_items_code[$clave]);
-                }
-            }
-        }
-        return array($arreglo_items_code,$arreglo_item_tree);
+    function crear_mind_jsmind($aData,$aData1){
+        $meta = crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = crear_format_jsmind("node_tree");
+        $hijos = crear_data_hijos_jsmind($aData,$aData1,"right");
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
     }
     function obtener_hijos_cluster($aT){ //RECIBE UN PADRE Y RETORNA TODOS SUS HIJOS
         try { //Algunos cluster no tienen hijos, por eso intento contar los hijos
@@ -106,8 +104,8 @@
             $hijos = NULL;
         }
         if($hijos != NULL){ //Si tiene hijos y ahora debo verificar si dentro de sus hijos hay un cluster
-            $padre_siguientes = $arg->attribute->children;
-            recorre_hijos($padre_siguientes);
+            //$padre_siguientes = $arg->attribute->children;
+            //recorre_hijos($padre_siguientes);
             return $hijos;
         }else{
             return NULL;
@@ -180,23 +178,14 @@
         //tmp_id tiene todos los hijos de data
         //aTrama es el diccionario de todos los id => item_definition
         $nodo_root = $aTrama1[$concept];
-        $aTrama1 = array();
-        array_push($aTrama1,$nodo_root);
-        array_push($aTrama1,$def_1_name);
-        array_push($aTrama1,$def_2_name);
+        $aTrama1_padres = array();
+        $aTrama2_hijos = $tmp_id;
+        array_push($aTrama1_padres,$nodo_root);
+        array_push($aTrama1_padres,$def_1_name);
+        array_push($aTrama1_padres,$def_2_name);
+        $aTrama2_hijos = array_values_recursive($aTrama2_hijos);
 
-        print "<pre>";
-        print_r($aTrama);
-        print "</pre>";
-        print "\n";
-        print "<pre>";
-        print_r($aTrama1);
-        print "</pre>";
-        print "\n";
-        print "<pre>";
-        print_r($tmp_id);
-        print "</pre>";
-        print "\n";
+        crear_mind_jsmind($aTrama1_padres,$aTrama2_hijos,"right");
         
     }
     if ($tmp_tipo_arquetipo == "OBSERVATION") {
@@ -213,7 +202,59 @@
     }if ($tmp_tipo_arquetipo == "SECTION") {
     }
 
+    function crear_data_hijos_jsmind($padres,$hijos,$dir){ //funcion que crea los hijos de root (jsmind)
+        //lo primero es crear el nodo root, padre de todos los demas nodos
+        $json_sender = array();
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $string_f = (string) NULL; 
+        foreach ($hijos as $keyq => $valueq) {
+            $ind = $keyq+150;
+            $llave = (string) $ind;
+            if(is_array($valueq)== FALSE){ //Si el nodo que estoy procesando no tiene mas hijos
+                $valor = (string) $valueq;
+                array_push($json_sender,json_encode(array('id'=>'"'.$llave.'"',"topic"=>$valor)));
+            }else{
+                $array_con_hijos = $valueq;
+                $tmp_array_con_hijos = array();
+                $padre_array_con_hijos = $array_con_hijos[0];//mas arriba explicado, siempre el padre estara en 0
+                foreach ($array_con_hijos as $keyb =>$valueb) { //recorremos el arreglo para guardar sus hijos
+                    $ind_2 = $keyb+200;
+                    $llave_kb = (string) $ind_2;
+                    array_push($tmp_array_con_hijos,array('id'=>$llave_kb,"topic"=>$valueb));
+                }
+                array_push($json_sender,json_encode(array('id'=>$llave,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+            }
 
+        }
+
+        $padres_split = array_chunk($padres, 1);//spliteamos nodoroot,data,protocol array(1=>array([0]=>data),
+                                                                                        //2=>array([0]=>protocol))
+        unset($padres_split[0]); //sacamos el nodo root 
+        $string_elem_padre = (string) NULL; //string final
+        foreach($padres_split as $keya => $valuea){ //recorrimos data,protocol
+            $elemento = '"'.$valuea[0].'"'; //puede tomar data o protocol
+            $id_padre = $keya+100;
+            if($valuea[0] == 'data'){
+                $string_elem_padre .= '{"id":"'.$id_padre.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender[$i];
+                    }
+                }
+                $string_elem_padre .= $string_f."]},";
+            }
+            else{
+                $string_elem_padre .= '{"id":"'.$id_padre.'","topic":'.$elemento.',"direction":"'.$dir.'","children":""}]}';
+            }
+        }
+        $string_nodo_root .= $string_elem_padre;
+        //echo $string_nodo_root;
+        return $string_nodo_root;
+        
+    }
 
     
     //definicion -> atributos(data, protocol)->hijos de (data,protocol)->atributos de data protocol

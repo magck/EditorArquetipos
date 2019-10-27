@@ -164,7 +164,7 @@
     }
  
     crear_mind_jsmind($aData,$aData1);
-
+    print_r($aData1);
     function crear_mind_jsmind($aData,$aData1){
         $meta = crear_meta_jsmind("archetype","importe_editor","1.0");
         $format = crear_format_jsmind("node_tree");

@@ -2049,42 +2049,15 @@ __webpack_require__.r(__webpack_exports__);
   },
 
   /*  mounted(){
-  var mind = {
-  "meta":{
-     "name":"jsMind remote",
-     "author":"hizzgdev@163.com",
-     "version":"0.2"
-  },
-  "format":"node_tree",
-  "data":{"id":"root","topic":"jsMind","children":[
-     {"id":"easy","topic":"Easy","direction":"left","children":[
-         {"id":"easy1","topic":"Easy to show"},
-         {"id":"easy2","topic":"Easy to edit"},
-         {"id":"easy3","topic":"Easy to store"},
-         {"id":"easy4","topic":"Easy to embed"}
-     ]},
-     {"id":"open","topic":"Open Source","direction":"right","children":[
-         {"id":"open1","topic":"on GitHub"},
-         {"id":"open2","topic":"BSD License"}
-     ]},
-     {"id":"powerful","topic":"Powerful","direction":"right","children":[
-         {"id":"powerful1","topic":"Base on Javascript"},
-         {"id":"powerful2","topic":"Base on HTML5"},
-         {"id":"powerful3","topic":"Depends on you"}
-     ]},
-     {"id":"other","topic":"test node","direction":"left","children":[
-         {"id":"other1","topic":"I'm from local variable"},
-         {"id":"other2","topic":"I can do everything"}
-     ]}
-  ]}
-  };
-             var options = {
-                 container:'jsmind_container',
-                 editable:true,
-                 theme:'primary'
-             }
-             var jm = jsMind.show(options,mind);
-  },*/
+    var mind = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Health risk assessment","children":[{"id":"101","topic":"data","direction":"right","children":[{"id":"\"150\"","topic":"Health risk"},{"id":"151","topic":"Risk factors","children":[{"id":"200","topic":"Risk factors"},{"id":"201","topic":"Risk factor"},{"id":"202","topic":"Presence"},{"id":"203","topic":"Description"},{"id":"204","topic":"Date identified"},{"id":"205","topic":"Mitigated"},{"id":"206","topic":"Link to evidence"},{"id":"207","topic":"Detail"},{"id":"208","topic":"Comment"}]},{"id":"\"152\"","topic":"Risk assessment"},{"id":"\"153\"","topic":"Assessment type"},{"id":"\"154\"","topic":"Time period"},{"id":"\"155\"","topic":"Rationale"},{"id":"\"156\"","topic":"Comment"}]},{"id":"102","topic":"protocol","direction":"right","children":""}]}};
+    var options = {
+        container:'jsmind_container',
+        editable:true,
+        theme:'primary'
+    }
+    var jm = jsMind.show(options,mind);
+    },
+  */
   methods: {
     subirformulario: function subirformulario(file) {
       file.preventDefault();
@@ -2152,17 +2125,7 @@ __webpack_require__.r(__webpack_exports__);
         currentObj.snackbar = true;
         currentObj.text = rspta.msg;
         var padre_jsmind = rspta.padre;
-        /*
-        let hijos = rspta.hijos
-        let nodos_jsmind = rspta.nodos
-        let JSON_objs = JSON.parse(nodos_jsmind);
-        let nodos_hijo = [];
-          for (let index = 0; index < JSON_objs.data.length; index++) {
-            nodos_hijo.push(JSON_objs.data[index]);
-        }
-          hijos.children = nodos_hijo;
-        padre_jsmind.children = [hijos];
-        */
+        var nombre_archetype = rspta.nombre_archetype; //console.log(padre_jsmind);                
 
         var mind = JSON.parse(padre_jsmind);
         var options = {
@@ -2171,6 +2134,7 @@ __webpack_require__.r(__webpack_exports__);
           theme: 'primary'
         };
         var jm = jsMind.show(options, mind);
+        jm.collapse_all();
         currentObj.data = jm;
       })["catch"](function (error) {
         console.log(error.message);
@@ -2182,20 +2146,24 @@ __webpack_require__.r(__webpack_exports__);
     exportar: function exportar(formulario) {
       formulario.preventDefault();
       var currentObj = this;
-      var datos_exportar = currentObj.data.get_data(); //get data obtiene el mind del modelo jsmind 
-
-      var mind_string = jsMind.util.json.json2string(datos_exportar);
-      var nombre_arquetipo = currentObj.nombre_arch_expor;
-      var exportObj = mind_string;
-      var exportName = nombre_arquetipo + "data";
-      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-      var downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", exportName + ".json");
-      document.body.appendChild(downloadAnchorNode); // required for firefox
-
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
+      var mind_data = currentObj.data.get_data('node_array');
+      var mind_name = mind_data.meta.name;
+      var mind_str = jsMind.util.json.json2string(mind_data);
+      jsMind.util.file.save(mind_str, 'text/jsmind', mind_name + '.json');
+      /* 
+       var datos_exportar = currentObj.data.get_data() //get data obtiene el mind del modelo jsmind 
+       var mind_string = jsMind.util.json.json2string(datos_exportar);
+       var nombre_arquetipo = currentObj.nombre_arch_expor
+       var exportObj = mind_string
+       var exportName= nombre_arquetipo+"data"
+       var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+       var downloadAnchorNode = document.createElement('a');
+       downloadAnchorNode.setAttribute("href",     dataStr);
+       downloadAnchorNode.setAttribute("download", exportName + ".json");
+       document.body.appendChild(downloadAnchorNode); // required for firefox
+       downloadAnchorNode.click();
+       downloadAnchorNode.remove();
+       */
     }
   }
 });
@@ -2240,7 +2208,7 @@ exports.push([module.i, "@charset \"UTF-8\";\n/** Ripples */\n/** Elements */\n@
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9":
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css":
 /*!***********************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vuetify/dist/vuetify.min.css ***!
   \***********************************************************************************************************************************/
@@ -55888,7 +55856,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_vue__;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9");
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
