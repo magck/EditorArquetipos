@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/5.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/diagnosis.xml") or die("Error al cargar el xml");
 
     function buscar_item($padre,$idioma,$concepto){
         foreach($padre as $key=>$nodo)
@@ -43,164 +43,178 @@
         }
         return $xml;
     }
-    $concept = (string)parser($xml)->xpath('//a:concept')[0];//Concept es de donde parten (nodo padre)
-    $busca = parser($xml)->xpath('//a:node_id'); //Retorna un array de objetos SimpleXMLElement o FALSE en caso de error. 
-    $busca_relacion = parser($xml)->xpath('//a:term_definitions');
-    $buscar_type_name = parser($xml)->xpath('//a:rm_type_name');
-    $busca_attribute_name = parser($xml)->xpath('//a:rm_attribute_name');
-    //aData Arreglo $key -> $value que tiene los codigo -> items del arquetipo
-    //aData1 arreglo $key -> $value que tiene los codigo -> item del arquetipo de tipo tree
-    list($aData,$aData1) = buscar_item($busca_relacion,'en',$concept); 
-    $arreglo_elemento = array();
-    $arreglo_id = array();
-    $arreglo_id_elemento = array();
-    for ($i=0; $i < count($buscar_type_name); $i++) { 
-        $element = (string) $buscar_type_name[$i];
-        $unique_id = (string) $busca[$i];
-        if($unique_id == ''){
-            $arreglo_id[$i] = 'NO_ID';
-        }else{
-            $arreglo_id[$i] = $unique_id;
+    function buscar_item2($padre,$idioma,$concepto){
+        foreach($padre as $key=>$nodo)
+        {
+            switch ((string) $nodo['language']) {
+                case $idioma:
+                    $mykey = $key;
+            }  
         }
-        $arreglo_elemento[$i] = $element;
-    }
-    for ($i=0; $i < count($arreglo_id); $i++) { 
-        if($arreglo_id[$i] == 'NO_ID'){
-            $arreglo_id_elemento['NO_ID'.$i]=$arreglo_elemento[$i];
-        }else{
-            $arreglo_id_elemento[$arreglo_id[$i]]=$arreglo_elemento[$i];
-        }
-    }
-    $intento = $arreglo_id_elemento;
-    $llaves = array_keys($intento,'-');
-    $separados = implode(",",$intento); //separa por comas el arrego intento y lo hace un string
-    $array1 = explode('ITEM_TREE',$separados); //junta por ITEM_TREE
-    $array_final_final = array();
-    foreach ($array1 as $key => $value) {
-        $cadena = (string) $value;
-        $arrayf1 = explode(',',$cadena);
-        $array_final_final['ITEM_TREE'.$key] = $arrayf1;
-    }
-    unset($array_final_final['ITEM_TREE0']);
-    foreach ($array_final_final as $key => $value) {
-        $array_final_final[$key] = array_filter($array_final_final[$key]);
-    }
-    $types = array('Extension','Last updated');
-    $tmp = array();
-    foreach ($types as $key => $value) {
-        if(in_array($value,$aData)){
-            $busqueda = array_search($value,$aData);
-            $elemento = $aData[$busqueda];
-            $tmp[$busqueda] = $elemento;
-            unset($aData[$busqueda]);
-        }
-
-    }
-    $temporal_3 = $array_final_final;
-    foreach ($array_final_final as $key => $value) {
-        foreach($value as $llave => $valor){
-            if($valor == 'ELEMENT'){
-                unset($temporal_3[$key][$llave]);
+        $tmp = $padre[$mykey]->items;
+        $arreglo_items_code = array(); 
+        $arreglo_item_tree = array();
+        for ($i=0; $i < count($tmp); $i++) { 
+            $descripcion = (string)$padre[$mykey]->items[$i]->items[1];
+            $codigo = (string)$padre[$mykey]->items[$i]['code'];
+            if($descripcion != "@ internal @"){ //Aqui hacemos un filtro de los items
+                $item = (string)$padre[$mykey]->items[$i]->items[0];
+                $arreglo_items_code[$codigo] = $item;
+            }else{
+                $item = (string)$padre[$mykey]->items[$i]->items[0];
+                $arreglo_item_tree[$codigo] = $item;
             }
-        }
-    }
-    $array_final_final = $temporal_3;
-    $arreglo_nodos = array();
-    foreach ($busca_attribute_name as $key => $value) {
-        if($value != 'value' and $value != 'items'){
-            $temp = (string) $value;
-            array_push($arreglo_nodos,$temp);
-        }
-    }
-    $temporal_4 = $arreglo_nodos;
-    foreach ($temporal_4 as $key => $value) {
-        if($value == 'defining_code'){
-            unset($arreglo_nodos[$key]);
-        }
-    }
-    $indice = 0;
-    $arreglo_nodos = array_values($arreglo_nodos);
-    foreach ($aData1 as $key => $value) {
-        if($value == 'Tree' || $value == 'List' || $value == 'defining_code'){
-            $buscar_nodo = array_search($value,$aData1);
-            $aData1[$key] = $arreglo_nodos[$indice];
-            $indice = $indice +1;
-        }
-    }
-
-    $aData1 = array_values($aData1);
-    $aData = array_values($aData);
-    print "<pre>";
-    print_r($aData);
-    print "</pre>";
-    print "\n";
-    print "<pre>";
-    print_r($aData1);
-    print "</pre>";
-    print "\n";
-
-
-    function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction){
-        return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction);
-    }
-    $meta=array('name'=>'archetype','author'=>'editor_import',"version"=>'0.1'); 
-
-    function crear_meta_jsmind($nombre,$autor,$version){
-        $string_head = '"meta":{
-            "name":"'.$nombre.'",
-            "author":"'.$autor.'",
-            "version":"'.$version.'"
-        },';
-        return $string_head;
-    }
-    function crear_format_jsmind($formato){
-        $string_format = '"format":"'.$formato.'",';
-        return $string_format;
-    }
- 
-    crear_mind_jsmind($aData,$aData1);
-
-    function crear_mind_jsmind($aData,$aData1){
-        $meta = crear_meta_jsmind("archetype","importe_editor","1.0");
-        $format = crear_format_jsmind("node_tree");
-        $hijos = crear_data_hijos_jsmind($aData,$aData1,"right");
-        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
-        return $string_mind;
-    }
-
-    function crear_data_hijos_jsmind($hijos,$padres,$dir){ //funcion que crea los hijos de root (jsmind)
-        $json_sender = array();
-        $nodo_root = $padres[0];
-        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
-        $string_f = (string) NULL; 
-        foreach ($hijos as $keyq => $valueq) {
-            $llave = (string) $keyq;
-            $valor = (string) $valueq;
-            array_push($json_sender,json_encode(array('id'=>'"'.$keyq.'"',"topic"=>$valueq)));
-        }
-        $padres_split = array_chunk($padres, 1);
-        unset($padres_split[0]);
-        $string_elem_padre = (string) NULL;
-        foreach($padres_split as $keya => $valuea){
-            $elemento = '"'.$valuea[0].'"';
-            $id_padre = '"'.$keya.'"';
-            if($valuea[0] == 'data'){
-                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'",';
-                for ($i=0; $i < count($json_sender); $i++) { 
-                    if($i != 0){
-                        $string_f.=",".$json_sender[$i];
-                    }else{
-                        $string_f = '"children"'.":"."[".$json_sender[$i];
-                    }
+            if($codigo == $concepto){
+                $item = (string)$padre[$mykey]->items[$i]->items[0];
+                $arreglo_item_tree[$codigo] = $item;
+            }
+            foreach($arreglo_items_code as $clave => $valor){
+                if($concepto == $clave){
+                    unset($arreglo_items_code[$clave]);
                 }
-                $string_elem_padre .= $string_f."]},";
-            }
-            else{
-                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'","children":""}]}';
             }
         }
-        $string_nodo_root .= $string_elem_padre;
-        return $string_nodo_root;
+        return array($arreglo_items_code,$arreglo_item_tree);
+    }
+    function obtener_hijos_cluster($aT){ //RECIBE UN PADRE Y RETORNA TODOS SUS HIJOS
+        try { //Algunos cluster no tienen hijos, por eso intento contar los hijos
+            $hijos_cluster = $aT->attributes->children;//hijos de cluster
+            $nro_hijos = count($hijos_cluster); //si los cuenta bien
+        } catch (Exception $e) { //sino los puede contar
+            $nro_hijos = FALSE; //no tiene hijos
+            //echo 'Excepción capturada: ',  $e->getMessage(), "\n";
+        }
+        if($nro_hijos != FALSE){
+            $array_hijos = array();
+            $array_hijos[(string)$aT->node_id] = (string)$aT->rm_type_name;
+            //array_push($array_hijos,$aT->rm_type_name);
+            for ($e=0; $e < $nro_hijos; $e++) { 
+                $array_hijos[(string)$hijos_cluster[$e]->node_id] = (string)$hijos_cluster[$e]->rm_type_name;
+            }
+            return $array_hijos;
+        }else{
+            return NULL;
+        }
+
     }
 
+    function recorre_hijos($arg){
+        $arreglo = array();
+        try {
+            $hijos = obtener_hijos_cluster($arg);
+        } catch (Exception $e) {
+            $hijos = NULL;
+        }
+        if($hijos != NULL){ //Si tiene hijos y ahora debo verificar si dentro de sus hijos hay un cluster
+            $padre_siguientes = $arg->attribute->children;
+            recorre_hijos($padre_siguientes);
+            return $hijos;
+        }else{
+            return NULL;
+        }
+    }
+
+    $tipos_conocidos = array('openEHR-EHR-ACTION','openEHR-EHR-EVALUATION','openEHR-EHR-OBSERVATION',
+                                "openEHR-EHR-INSTRUCTION","openEHR-EHR-ADMIN_ENTRY","openEHR-EHR-COMPOSITION"
+                            ,"openEHR-EHR-CLUSTER","openEHR-EHR-SECTION");
+    $tipo_arquetipo_xml = (string)parser($xml)->xpath('//a:archetype_id')[0]->value;
+    $tipo_actual_arquetipo = explode(".",$tipo_arquetipo_xml)[0];
+
+    foreach ($tipos_conocidos as $value) {
+        if($value === $tipo_actual_arquetipo){
+           $tmp_tipo_arquetipo = explode("-",$value)[2];
+        }
+    }
+    if($tmp_tipo_arquetipo == "ACTION"){
+    
+
+    }
+    if($tmp_tipo_arquetipo == "EVALUATION") {
+        $concept = (string)parser($xml)->xpath('//a:concept')[0];
+        $busca_it = parser($xml)->xpath('//a:definition');
+        $busca_term_definition = parser($xml)->xpath('//a:term_definitions');
+        $def_attributes = count($busca_it[0]->attributes);
+
+        $def_data = NULL;
+        if($def_attributes>=2){ //si tengo data y protocol
+            $def_1 = $busca_it[0]->attributes[0]->children->attributes->children;
+            $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
+            $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;
+            $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+        }
+        //FOR PARA DATA
+        $tmp_id = [];
+        for ($i=0; $i < count($def_1); $i++) { 
+            $nombre = (string)$busca_it[0]->attributes[0]->children->attributes->children[$i]->rm_type_name; //todos los hijos de data,hasta children[$i] es cluster
+            $id = $busca_it[0]->attributes[0]->children->attributes->children[$i]->node_id ; //id de hijos de data
+            if($nombre == "CLUSTER"){//si dentro de data encuentro un nodo llamado cluster
+                $cluster = $busca_it[0]->attributes[0]->children->attributes->children[$i];
+                $hijos_c = recorre_hijos($cluster);
+                $tmp_id[(string)$id] = $hijos_c;
+            }else{
+                $tmp_id[(string)$id] = $nombre;
+            }
+
+
+        }    
+        //FOR PARA PROTOCOL
+        list($aTrama,$aTrama1) =buscar_item($busca_term_definition,'en',$concept);
+        foreach ($tmp_id as $key => $value) {
+            $nodo_id = array_key_exists($key,$aTrama);
+            if($nodo_id != FALSE){
+                $valor_actual_data = $aTrama[$key];
+                if(gettype($tmp_id[$key]) == 'array'){
+                    foreach ($tmp_id[$key] as $llave => $valor) {
+                        $nodo_id_2 = array_key_exists($llave,$aTrama);
+                        if($nodo_id_2 != FALSE){
+                            $valor_actual_data_2 = $aTrama[$llave];
+                            $tmp_id[$key][$llave] = $valor_actual_data_2;
+                        }
+                    }
+                }else{
+                    $tmp_id[$key] =  $aTrama[$key];
+                }
+
+            }
+        }
+        //tmp_id tiene todos los hijos de data
+        //aTrama es el diccionario de todos los id => item_definition
+        $nodo_root = $aTrama1[$concept];
+        $aTrama1 = array();
+        array_push($aTrama1,$nodo_root);
+        array_push($aTrama1,$def_1_name);
+        array_push($aTrama1,$def_2_name);
+
+        print "<pre>";
+        print_r($aTrama);
+        print "</pre>";
+        print "\n";
+        print "<pre>";
+        print_r($aTrama1);
+        print "</pre>";
+        print "\n";
+        print "<pre>";
+        print_r($tmp_id);
+        print "</pre>";
+        print "\n";
+        
+    }
+    if ($tmp_tipo_arquetipo == "OBSERVATION") {
+
+    }
+    if ($tmp_tipo_arquetipo == "INSTRUCTION") {
+
+    }if ($tmp_tipo_arquetipo == "ADMIN_ENTRY") {
+
+    }if ($tmp_tipo_arquetipo == "COMPOSITION") {
+
+    }if ($tmp_tipo_arquetipo == "CLUSTER") {
+
+    }if ($tmp_tipo_arquetipo == "SECTION") {
+    }
+
+
+
+    
+    //definicion -> atributos(data, protocol)->hijos de (data,protocol)->atributos de data protocol
 

@@ -36,7 +36,8 @@ class fileController extends Controller
         $validation = $request->validate(['archivo_xml' => 'required|file|mimes:xml,adl|max:2048']);//2mb
         $file = $validation['archivo_xml'];
         $xml = simplexml_load_file($file);
-        if($xml != False){ //simple_xml_load retorna el obj xml o falso en caso de error; si el archivo fue recibido crrectamente
+        
+       if($xml != False){ //simple_xml_load retorna el obj xml o falso en caso de error; si el archivo fue recibido crrectamente
             $concept = (string) $this->parser($xml)->xpath('//a:concept')[0];//Concept es de donde parten (nodo padre)
             $busca = $this->parser($xml)->xpath('//a:node_id'); //Retorna un array de objetos SimpleXMLElement o FALSE en caso de error. 
             $busca_relacion = $this->parser($xml)->xpath('//a:term_definitions');

@@ -2170,8 +2170,8 @@ __webpack_require__.r(__webpack_exports__);
           editable: true,
           theme: 'primary'
         };
-        currentObj.data = mind;
         var jm = jsMind.show(options, mind);
+        currentObj.data = jm;
       })["catch"](function (error) {
         console.log(error.message);
         console.log(error.response.data);
@@ -2182,9 +2182,11 @@ __webpack_require__.r(__webpack_exports__);
     exportar: function exportar(formulario) {
       formulario.preventDefault();
       var currentObj = this;
-      var datos_exportar = currentObj.data;
+      var datos_exportar = currentObj.data.get_data(); //get data obtiene el mind del modelo jsmind 
+
+      var mind_string = jsMind.util.json.json2string(datos_exportar);
       var nombre_arquetipo = currentObj.nombre_arch_expor;
-      var exportObj = datos_exportar;
+      var exportObj = mind_string;
       var exportName = nombre_arquetipo + "data";
       var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
       var downloadAnchorNode = document.createElement('a');
@@ -2238,7 +2240,7 @@ exports.push([module.i, "@charset \"UTF-8\";\n/** Ripples */\n/** Elements */\n@
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css":
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9":
 /*!***********************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vuetify/dist/vuetify.min.css ***!
   \***********************************************************************************************************************************/
@@ -55886,7 +55888,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_vue__;
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css");
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vuetify.min.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vuetify/dist/vuetify.min.css?bdb9");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 

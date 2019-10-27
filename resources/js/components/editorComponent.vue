@@ -198,9 +198,9 @@ export default {
                     editable:true,
                     theme:'primary'
                 }
-                currentObj.data = mind
-                var jm = jsMind.show(options,mind);
 
+                var jm = jsMind.show(options,mind);
+                currentObj.data = jm
 
             })
             .catch(function (error) {
@@ -214,9 +214,10 @@ export default {
         exportar(formulario){
             formulario.preventDefault();
             let currentObj = this
-            var datos_exportar = currentObj.data
+            var datos_exportar = currentObj.data.get_data() //get data obtiene el mind del modelo jsmind 
+            var mind_string = jsMind.util.json.json2string(datos_exportar);
             var nombre_arquetipo = currentObj.nombre_arch_expor
-            var exportObj = datos_exportar
+            var exportObj = mind_string
             var exportName= nombre_arquetipo+"data"
             var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
             var downloadAnchorNode = document.createElement('a');
