@@ -2048,8 +2048,8 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
 
-  /* mounted(){
-  var mind = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Adverse reaction risk","children":[{"id":"301","topic":"data","direction":"right","children":[{"id":"\"100\"","topic":"Substance"},{"id":"\"101\"","topic":"Status"},{"id":"\"102\"","topic":"Criticality"},{"id":"\"103\"","topic":"Category"},{"id":"\"104\"","topic":"Onset of last reaction"},{"id":"\"105\"","topic":"Reaction mechanism"},{"id":"\"106\"","topic":"Comment"},{"id":"107","topic":"Reaction event","children":[{"id":"200","topic":"Reaction event"},{"id":"201","topic":"Specific substance"},{"id":"202","topic":"Certainty"},{"id":"203","topic":"Manifestation"},{"id":"204","topic":"Reaction description"},{"id":"205","topic":"Onset of reaction"},{"id":"206","topic":"Duration of reaction"},{"id":"207","topic":"Severity of reaction"},{"id":"208","topic":"Reaction details"},{"id":"209","topic":"Initial exposure"},{"id":"210","topic":"Duration of exposure"},{"id":"211","topic":"Route of exposure"},{"id":"212","topic":"Exposure description"},{"id":"213","topic":"Exposure details"},{"id":"214","topic":"Clinical management description"},{"id":"215","topic":"Clinical management details"},{"id":"216","topic":"Reporting details"},{"id":"217","topic":"Information source"},{"id":"218","topic":"Reaction comment"}]}]},{"id":"402","topic":"protocol","direction":"left","children":[{"id":"\"600\"","topic":"Last updated"},{"id":"\"601\"","topic":"Extension"},{"id":"\"602\"","topic":"Supporting clinical record information"},{"id":"\"603\"","topic":"Reaction reported?"},{"id":"604","topic":"Report summary","children":[{"id":"700","topic":"Report summary"},{"id":"701","topic":"Date of report"},{"id":"702","topic":"Report comment"},{"id":"703","topic":"Adverse reaction report"}]}]}]}};
+  /*    mounted(){
+      var mind  = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Health education","children":[{"id":"100","topic":"ism_transition","direction":"right","children":[{"id":"\"101\"","topic":"Education planned"},{"id":"\"102\"","topic":"Education recommended"},{"id":"\"103\"","topic":"Education postponed"},{"id":"\"104\"","topic":"Education cancelled"},{"id":"\"105\"","topic":"Education scheduled"},{"id":"\"106\"","topic":"Education provided"},{"id":"\"107\"","topic":"Education suspended"},{"id":"\"108\"","topic":"Education not completed"},{"id":"\"109\"","topic":"Education completed"}]},{"id":"300","topic":"description","direction":"right","children":[{"id":"\"301\"","topic":"Requestor order identifier"},{"id":"\"302\"","topic":"Requestor"},{"id":"\"303\"","topic":"Receiver order identifier"},{"id":"\"304\"","topic":"Receiver"},{"id":"\"305\"","topic":"Recipient"},{"id":"\"306\"","topic":"Interpreter details"},{"id":"\"307\"","topic":"Extension"}]},{"id":"200","topic":"protocol","direction":"right","children":[{"id":"\"201\"","topic":"Topic name"},{"id":"\"202\"","topic":"Description"},{"id":"\"203\"","topic":"Method"},{"id":"\"204\"","topic":"Material details"},{"id":"\"205\"","topic":"Additional details"},{"id":"\"206\"","topic":"Session Number"},{"id":"\"207\"","topic":"Reason"},{"id":"\"208\"","topic":"Outcome"},{"id":"\"209\"","topic":"Scheduled date\/ time"},{"id":"\"210\"","topic":"Comment"}]}]}};
       var options = {
           container:'jsmind_container',
           editable:true,
@@ -2137,6 +2137,9 @@ __webpack_require__.r(__webpack_exports__);
         jm.collapse_all();
         currentObj.data = jm;
       })["catch"](function (error) {
+        var mensaje_error = error.response.data.msg;
+        currentObj.snackbar = true;
+        currentObj.text = mensaje_error;
         console.log(error.message);
         console.log(error.response.data);
         console.log(error.response.status);
