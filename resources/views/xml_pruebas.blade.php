@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/action.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/blood_observation.xml") or die("Error al cargar el xml");
     function crear_meta_jsmind($nombre,$autor,$version){
         $string_head = '"meta":{
             "name":"'.$nombre.'",
@@ -142,69 +142,34 @@
         }
     }
     if($tmp_tipo_arquetipo == "ACTION"){
+    }
+    if($tmp_tipo_arquetipo == "EVALUATION") {
+    }
+    if ($tmp_tipo_arquetipo == "OBSERVATION") {
         $concept = (string)parser($xml)->xpath('//a:concept')[0];
         $busca_it = parser($xml)->xpath('//a:definition');
         $busca_term_definition = parser($xml)->xpath('//a:term_definitions');
-        $def_attributes = count($busca_it[0]->attributes);
-
-        if($def_attributes>=2){ //si tengo data y protocol
-            $def_1 = $busca_it[0]->attributes[0]->children; //PATHWAY
-            $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
-            $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;//DESCRIPTION
-            $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
-            $def_3 = $busca_it[0]->attributes[2]->children->attributes->children; //PROTOCOL
-            $def_3_name =(string) $busca_it[0]->attributes[2]->rm_attribute_name;
+        try {
+            $def_attributes = count($busca_it[0]->attributes);
+            $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];
+        } catch (\Exception $e) {
+            echo "arquetipo no cuenta con una etiqueta".$e->getMessage();
         }
-        //echo $def_1_name,$def_2_name,$def_3_name;
-
-        //FOR PARA PATHWAY
-        $array_pathway = [];
-        //print_format($def_1);
-        for ($i=0; $i < count($def_1); $i++) { 
-            $nombre = $busca_it[0]->attributes[0]->children[$i]->rm_type_name; //nombre todos los hijos de pathway,hasta children[$i] es cluster
-            $id = $busca_it[0]->attributes[0]->children[$i]->node_id; //id de hijos de pathway
-            $array_pathway[(string)$id] =(string) $nombre ; 
-        }    
-        //print_format($array_pathway);
-
-        //FOR PARA DESCRIPTION
-        $array_description= array();
         
-        for ($h=0; $h < count($def_2); $h++) { 
-            $nombre_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->rm_type_name;
-            $id_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->node_id;
-            if ((string)$nombre_p == "CLUSTER") {
-                $cluster_description = $busca_it[0]->attributes[1]->children->attributes->children[$h];
-                $hijos_cluster_description = recorre_hijos($cluster_description);
-                if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
-                    $array_description[(string)$id_p] = (string)$nombre_p;
-                }else{
-                    $array_description[(string)$id_p] = $hijos_cluster_description;
-                }
-                
-            }else{
-                $array_description[(string)$id_p] = (string)$nombre_p;
-            }
-                     
+        if($def_attributes>=2){ //si tengo data y protocol
+            $def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]; //DATA
+            $short_def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes->children;
+            $def_1_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->rm_attribute_name;
+            $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];//STATE
+            $short_def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes->children;
+            $def_2_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->rm_attribute_name;
+            $def_3 = $busca_it[0]->attributes[1]->children->attributes->children; //PROTOCOL
+            $def_3_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
         }
-        //FOR PARA PROTOCOL
-        $array_protocol = array();
-        for ($q=0; $q < count($def_3); $q++) { 
-            $nombre_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->rm_type_name;
-            $id_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->node_id;
-            //$array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
-            if((string)$nombre_protocol == "CLUSTER"){
-                $cluster_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q];
-                $hijos_cluster_protocol = recorre_hijos($cluster_protocol);
-                if($hijos_cluster_protocol == NULL){
-                    $array_protocol[(string)$id_protocol] = (string) $nombre_protocol;
-                }else{
-                    $array_protocol[(string)$id_protocol] = $hijos_cluster_protocol;
-                }
-            }else{
-                $array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
-            }
-        }
+        
+        $array_data = recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes,count($short_def_1));
+        $array_state = recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes,count($short_def_2));
+        $array_protocol = recorrer_xml_OBSERVATION($busca_it[0]->attributes[1]->children->attributes,count($def_3));
 
         list($aTrama,$aTrama1) =buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
         //arreglo aTrama que tiene los hijos del nodo root
@@ -215,36 +180,15 @@
         array_push($aTrama1,$def_2_name);
         array_push($aTrama1,$def_3_name);
         //funcion match para renombrar los arreglos anteriores
-        $array_pathway = array_values_recursive(match($array_pathway,$aTrama));
+        $array_data = array_values_recursive(match($array_data,$aTrama));
         $array_protocol = array_values_recursive(match($array_protocol,$aTrama));
-        $array_description = array_values_recursive(match($array_description,$aTrama));
+        $array_state = array_values_recursive(match($array_state,$aTrama));
+        print_format($array_data);
+        print_format($array_state);
+        print_format($array_protocol);
+        print_format($aTrama1);
 
-        echo crear_mind_jsmind($aTrama1,$array_pathway,$array_protocol,$array_description,"right");
-        /*
-        //print_format($tmp_pro);
-        
-
-        //tmp_id tiene todos los hijos de data
-        //aTrama es el diccionario de todos los id => item_definition
-        $array_pathway = match($array_pathway,$aTrama); //ESTO AGREGADO
-        $hijos_protocol = match($array_description,$aTrama);
-        $nodo_root = $aTrama1[$concept];
-        $aTrama1_padres = array();
-        $aTrama2_hijos = $array_pathway;
-        array_push($aTrama1_padres,$nodo_root);
-        array_push($aTrama1_padres,$def_1_name);
-        array_push($aTrama1_padres,$def_2_name);
-        
-        $aTrama2_hijos = array_values_recursive($aTrama2_hijos);
-        $aTrama3_hijos_c = array_values_recursive($hijos_protocol);
-
-        //echo crear_mind_jsmind($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right");
-            
-*/
-    }
-    if($tmp_tipo_arquetipo == "EVALUATION") {
-    }
-    if ($tmp_tipo_arquetipo == "OBSERVATION") {
+        echo crear_mind_jsmind($aTrama1,$array_data,$array_protocol,$array_state,"right");
 
     }
     if ($tmp_tipo_arquetipo == "INSTRUCTION") {
@@ -256,6 +200,32 @@
     }if ($tmp_tipo_arquetipo == "CLUSTER") {
 
     }if ($tmp_tipo_arquetipo == "SECTION") {
+    }
+
+    function recorrer_xml_OBSERVATION($xml,$number){
+        try {
+            $array_state= array();
+            for ($h=0; $h < $number; $h++) { 
+                $nombre_p = $xml->children[$h]->rm_type_name;
+                $id_p = $xml->children[$h]->node_id;
+                if ((string)$nombre_p == "CLUSTER") {
+                    $cluster_description = $xml->children[$h];
+                    $hijos_cluster_description = recorre_hijos($cluster_description);
+                    if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
+                        $array_state[(string)$id_p] = (string)$nombre_p;
+                    }else{
+                        $array_state[(string)$id_p] = $hijos_cluster_description;
+                    }
+                    
+                }else{
+                    $array_state[(string)$id_p] = (string)$nombre_p;
+                }
+                         
+            }
+            return $array_state;
+        } catch (\Exception $e) {
+            return NULL;
+        }
     }
 
     function match($tmp_id,$aTrama){ //AGREGUE ESTA FUNCION
@@ -309,7 +279,7 @@
         }
         return $json_sender_data;
     }
-    function crear_data_hijos_jsmind_ACTION($padres,$array_pathway,$array_description,$array_protocol,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
+    function crear_data_hijos_jsmind_ACTION($padres,$array_data,$array_description,$array_protocol,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
         //$json_sender_data = array();
@@ -326,7 +296,7 @@
         $string_f_protocol = (string) NULL;
         //PATHWAY
         $id_pathway = 100;
-        $json_sender_pathway = crear_array_hijos_jsmind_ACTION($array_pathway,$id_pathway+1);
+        $json_sender_pathway = crear_array_hijos_jsmind_ACTION($array_data,$id_pathway+1);
         //PROTOCOL
         $id_protocol = 200;
         $json_sender_protocol = crear_array_hijos_jsmind_ACTION($array_protocol,$id_protocol+1);
@@ -337,11 +307,9 @@
         $padres_split = array_chunk($padres, 1);
         unset($padres_split[0]); //sacamos el nodo root 
         $string_elem_padre = (string) NULL; //string final
-        print_format($padres_split);
         foreach ($padres_split as $keya => $valuea) {
-            $elemento = '"'.$valuea[0].'"'; //puede tomar pathway,description, protocol
-            //echo $valuea[0];
-            if($valuea[0] == 'description'){
+            $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state
+            if($valuea[0] == 'protocol'){
                 $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'",';
                 for ($i=0; $i < count($json_sender_description); $i++) { 
                     if($i != 0){
@@ -352,7 +320,7 @@
                 }
                 $string_elem_padre .= $string_f."]}"; 
             }
-            if($valuea[0] == 'ism_transition'){
+            if($valuea[0] == 'data'){
                 $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
                 for ($y=0; $y < count($json_sender_pathway); $y++) { 
                     if($y != 0){
@@ -363,7 +331,7 @@
                 }
                 $string_elem_padre .= $string_f_pathway."]}"; 
             }
-            if($valuea[0] == 'protocol'){
+            if($valuea[0] == 'state'){
                 $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
                 for ($t=0; $t < count($json_sender_protocol); $t++) { 
                     if($t != 0){
@@ -378,38 +346,6 @@
         }
         $string_nodo_root .= $string_elem_padre."]}";
         return $string_nodo_root;
-/*
-        foreach($padres_split as $keya => $valuea){ //recorrimos data,protocol
-            $elemento = '"'.$valuea[0].'"'; //puede tomar data o protocol
-            $id_padre = $keya+300;
-            $id_padre_2 = $keya+400;
-            if($valuea[0] == 'data'){
-                $string_elem_padre .= '{"id":"'.$id_padre.'","topic":'.$elemento.',"direction":"'.$dir.'",';
-                for ($i=0; $i < count($json_sender_pathway); $i++) { 
-                    if($i != 0){
-                        $string_f.=",".$json_sender_pathway[$i];
-                    }else{
-                        $string_f = '"children"'.":"."[".$json_sender_pathway[$i];
-                    }
-                }
-                $string_elem_padre .= $string_f."]},";
-            }
-            else{
-                $string_elem_padre .= '{"id":"'.$id_padre_2.'","topic":'.$elemento.',"direction":"left",';
-                for ($x=0; $x < count($json_sender_protocol); $x++) { 
-                    if($x != 0){
-                        $string_f_p .= ",".$json_sender_protocol[$x];
-                    }else{
-                        $string_f_p = '"children"'.":"."[".$json_sender_protocol[$x];
-                    }
-                }
-                $string_elem_padre .= $string_f_p."]}";
-            }
-        }
-        $string_nodo_root .= $string_elem_padre."]}";
-        //echo $string_nodo_root;
-        return $string_nodo_root;
-        */
     }
 
     

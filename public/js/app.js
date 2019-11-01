@@ -2049,7 +2049,7 @@ __webpack_require__.r(__webpack_exports__);
   },
 
   /*    mounted(){
-      var mind  = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Health education","children":[{"id":"100","topic":"ism_transition","direction":"right","children":[{"id":"\"101\"","topic":"Education planned"},{"id":"\"102\"","topic":"Education recommended"},{"id":"\"103\"","topic":"Education postponed"},{"id":"\"104\"","topic":"Education cancelled"},{"id":"\"105\"","topic":"Education scheduled"},{"id":"\"106\"","topic":"Education provided"},{"id":"\"107\"","topic":"Education suspended"},{"id":"\"108\"","topic":"Education not completed"},{"id":"\"109\"","topic":"Education completed"}]},{"id":"300","topic":"description","direction":"right","children":[{"id":"\"301\"","topic":"Requestor order identifier"},{"id":"\"302\"","topic":"Requestor"},{"id":"\"303\"","topic":"Receiver order identifier"},{"id":"\"304\"","topic":"Receiver"},{"id":"\"305\"","topic":"Recipient"},{"id":"\"306\"","topic":"Interpreter details"},{"id":"\"307\"","topic":"Extension"}]},{"id":"200","topic":"protocol","direction":"right","children":[{"id":"\"201\"","topic":"Topic name"},{"id":"\"202\"","topic":"Description"},{"id":"\"203\"","topic":"Method"},{"id":"\"204\"","topic":"Material details"},{"id":"\"205\"","topic":"Additional details"},{"id":"\"206\"","topic":"Session Number"},{"id":"\"207\"","topic":"Reason"},{"id":"\"208\"","topic":"Outcome"},{"id":"\"209\"","topic":"Scheduled date\/ time"},{"id":"\"210\"","topic":"Comment"}]}]}};
+      var mind = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Blood pressure","children":[{"id":"100","topic":"data","direction":"left","children":[{"id":"\"101\"","topic":"Systolic"},{"id":"\"102\"","topic":"Diastolic"},{"id":"\"103\"","topic":"Mean arterial pressure"},{"id":"\"104\"","topic":"Pulse pressure"},{"id":"\"105\"","topic":"Clinical interpretation"},{"id":"\"106\"","topic":"Comment"}]},{"id":"200","topic":"state","direction":"left","children":[{"id":"\"201\"","topic":"Position"},{"id":"\"202\"","topic":"Confounding factors"},{"id":"\"203\"","topic":"Exertion"},{"id":"\"204\"","topic":"Sleep status"},{"id":"\"205\"","topic":"Tilt"}]},{"id":"300","topic":"protocol","direction":"right","children":[{"id":"\"301\"","topic":"Cuff size"},{"id":"\"302\"","topic":"Location of measurement"},{"id":"\"303\"","topic":"Structured measurement location"},{"id":"\"304\"","topic":"Method"},{"id":"\"305\"","topic":"Mean arterial pressure formula"},{"id":"\"306\"","topic":"Systolic pressure formula"},{"id":"\"307\"","topic":"Diastolic pressure formula"},{"id":"\"308\"","topic":"Diastolic endpoint"},{"id":"\"309\"","topic":"Device"},{"id":"\"310\"","topic":"Extension"}]}]}};
       var options = {
           container:'jsmind_container',
           editable:true,
@@ -2125,8 +2125,8 @@ __webpack_require__.r(__webpack_exports__);
         currentObj.snackbar = true;
         currentObj.text = rspta.msg;
         var padre_jsmind = rspta.padre;
-        var nombre_archetype = rspta.nombre_archetype; //console.log(padre_jsmind);                
-
+        var nombre_archetype = rspta.nombre_archetype;
+        console.log(padre_jsmind);
         var mind = JSON.parse(padre_jsmind);
         var options = {
           container: 'jsmind_container',

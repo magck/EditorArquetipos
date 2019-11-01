@@ -46,65 +46,95 @@ class fileController extends Controller
                 $busca_it = $this->parser($xml)->xpath('//a:definition');
                 $busca_term_definition = $this->parser($xml)->xpath('//a:term_definitions');
                 $def_attributes = count($busca_it[0]->attributes);
+                $def_1 = NULL;$def_2 = NULL;$def_3 = NULL;
+                if($def_attributes>=3){
+                    try {
+                        $def_1 = $busca_it[0]->attributes[0]->children; //PATHWAY
+                        $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
+                    } catch (\Exception $e) {
+                        $def_1 = NULL;
+                        $def_1_name = NULL;
 
-                if($def_attributes>=2){ //si tengo data y protocol
-                    $def_1 = $busca_it[0]->attributes[0]->children; //PATHWAY
-                    $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
-                    $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;//DESCRIPTION
-                    $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
-                    $def_3 = $busca_it[0]->attributes[2]->children->attributes->children; //PROTOCOL
-                    $def_3_name =(string) $busca_it[0]->attributes[2]->rm_attribute_name;
+                    }
+                    try {
+                        $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;//DESCRIPTION
+                        $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+                    } catch (\Exception $e) {
+                        $def_2 = NULL;
+                        $def_2_name = NULL;
+                    }
+                    try {
+                        $def_3 = $busca_it[0]->attributes[2]->children->attributes->children; //PROTOCOL
+                        $def_3_name =(string) $busca_it[0]->attributes[2]->rm_attribute_name;
+                    } catch (\Exception $e) {
+                        $def_3 = NULL;
+                        $def_3_name = NULL;
+                    }
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Arquetipo imposible de procesar.',
+                    ],400);
                 }
-                //echo $def_1_name,$def_2_name,$def_3_name;
 
                 //FOR PARA PATHWAY
-                $array_pathway = [];
-                //print_format($def_1);
-                for ($i=0; $i < count($def_1); $i++) { 
-                    $nombre = $busca_it[0]->attributes[0]->children[$i]->rm_type_name; //nombre todos los hijos de pathway,hasta children[$i] es cluster
-                    $id = $busca_it[0]->attributes[0]->children[$i]->node_id; //id de hijos de pathway
-                    $array_pathway[(string)$id] =(string) $nombre ; 
-                }    
-                //print_format($array_pathway);
+                if($def_1 != NULL and $def_1_name != NULL){
+                    $array_pathway = [];
+                    //print_format($def_1);
+                    for ($i=0; $i < count($def_1); $i++) { 
+                        $nombre = $busca_it[0]->attributes[0]->children[$i]->rm_type_name; //nombre todos los hijos de pathway,hasta children[$i] es cluster
+                        $id = $busca_it[0]->attributes[0]->children[$i]->node_id; //id de hijos de pathway
+                        $array_pathway[(string)$id] =(string) $nombre ; 
+                    }    
+                }
+
 
                 //FOR PARA DESCRIPTION
-                $array_description= array();
+                if($def_2 != NULL and $def_2_name != NULL){
+                    $array_description= array();
                 
-                for ($h=0; $h < count($def_2); $h++) { 
-                    $nombre_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->rm_type_name;
-                    $id_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->node_id;
-                    if ((string)$nombre_p == "CLUSTER") {
-                        $cluster_description = $busca_it[0]->attributes[1]->children->attributes->children[$h];
-                        $hijos_cluster_description = $this->recorre_hijos($cluster_description);
-                        if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
-                            $array_description[(string)$id_p] = (string)$nombre_p;
-                        }else{
-                            $array_description[(string)$id_p] = $hijos_cluster_description;
-                        }
-                        
-                    }else{
-                        $array_description[(string)$id_p] = (string)$nombre_p;
-                    }
+                    for ($h=0; $h < count($def_2); $h++) { 
+                        $nombre_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->rm_type_name;
+                        $id_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->node_id;
+                        if ((string)$nombre_p == "CLUSTER") {
+                            $cluster_description = $busca_it[0]->attributes[1]->children->attributes->children[$h];
+                            $hijos_cluster_description = $this->recorre_hijos($cluster_description);
+                            if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
+                                $array_description[(string)$id_p] = (string)$nombre_p;
+                            }else{
+                                $array_description[(string)$id_p] = $hijos_cluster_description;
+                            }
                             
-                }
-                //FOR PARA PROTOCOL
-                $array_protocol = array();
-                for ($q=0; $q < count($def_3); $q++) { 
-                    $nombre_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->rm_type_name;
-                    $id_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->node_id;
-                    //$array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
-                    if((string)$nombre_protocol == "CLUSTER"){
-                        $cluster_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q];
-                        $hijos_cluster_protocol = $this->recorre_hijos($cluster_protocol);
-                        if($hijos_cluster_protocol == NULL){
-                            $array_protocol[(string)$id_protocol] = (string) $nombre_protocol;
                         }else{
-                            $array_protocol[(string)$id_protocol] = $hijos_cluster_protocol;
+                            $array_description[(string)$id_p] = (string)$nombre_p;
                         }
-                    }else{
-                        $array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
+                                
+                    }
+
+                }
+                
+                //FOR PARA PROTOCOL
+                if($def_3 != NULL and $def_3_name != NULL){
+                    $array_protocol = array();
+                    for ($q=0; $q < count($def_3); $q++) { 
+                        $nombre_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->rm_type_name;
+                        $id_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->node_id;
+                        //$array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
+                        if((string)$nombre_protocol == "CLUSTER"){
+                            $cluster_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q];
+                            $hijos_cluster_protocol = $this->recorre_hijos($cluster_protocol);
+                            if($hijos_cluster_protocol == NULL){
+                                $array_protocol[(string)$id_protocol] = (string) $nombre_protocol;
+                            }else{
+                                $array_protocol[(string)$id_protocol] = $hijos_cluster_protocol;
+                            }
+                        }else{
+                            $array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
+                        }
                     }
                 }
+
+
 
                 list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
                 //arreglo aTrama que tiene los hijos del nodo root
@@ -230,7 +260,63 @@ class fileController extends Controller
                 }
             }
             if($tmp_tipo_arquetipo == "OBSERVATION"){
-            
+                $concept = (string)$this->parser($xml)->xpath('//a:concept')[0];
+                $busca_it = $this->parser($xml)->xpath('//a:definition');
+                $busca_term_definition = $this->parser($xml)->xpath('//a:term_definitions');
+                try {
+                    $def_attributes = count($busca_it[0]->attributes);
+                    $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];
+                } catch (\Exception $e) {
+                    echo "arquetipo no cuenta con una etiqueta".$e->getMessage();
+                }
+                
+                if($def_attributes>=2){ //si tengo data y protocol
+                    $def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]; //DATA
+                    $short_def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes->children;
+                    $def_1_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->rm_attribute_name;
+                    $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];//STATE
+                    $short_def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes->children;
+                    $def_2_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->rm_attribute_name;
+                    $def_3 = $busca_it[0]->attributes[1]->children->attributes->children; //PROTOCOL
+                    $def_3_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+                }
+                
+                $array_data = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes,count($short_def_1));
+                $array_state = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes,count($short_def_2));
+                $array_protocol = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[1]->children->attributes,count($def_3));
+        
+                list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
+                //arreglo aTrama que tiene los hijos del nodo root
+                $primer_elemento_aTrama1 = reset($aTrama1);
+                $aTrama1 = array();
+                array_push($aTrama1,$primer_elemento_aTrama1);
+                array_push($aTrama1,$def_1_name);
+                array_push($aTrama1,$def_2_name);
+                array_push($aTrama1,$def_3_name);
+                //funcion match para renombrar los arreglos anteriores
+                $array_data = $this->array_values_recursive($this->match($array_data,$aTrama));
+                $array_protocol = $this->array_values_recursive($this->match($array_protocol,$aTrama));
+                $array_state = $this->array_values_recursive($this->match($array_state,$aTrama));
+
+               try {
+                    $json_final = $this->crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_state,"right");
+                } catch (Exception $e) {
+                    $json_final = NULL;
+                }
+                if($json_final != NULL){
+                    return response()->json([
+                        'padre' => $json_final,
+                        'status' => 'good',
+                        'msg' => 'Archivo procesado con exito',
+                        //'nombre_archetype'=>$aTrama1_padres[0],
+                    ],201);
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Archivo no encontrado',
+                    ],400);
+                }
+
             }
             if($tmp_tipo_arquetipo == "INSTRUCTION"){
             
@@ -346,7 +432,6 @@ class fileController extends Controller
         }
         return $json_sender_data;
     }
-
     function crear_data_hijos_jsmind($padres,$hijos,$hijos_prot,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
@@ -396,8 +481,6 @@ class fileController extends Controller
         return $string_nodo_root;
         
     }
-
-
     function crear_meta_jsmind($nombre,$autor,$version){
         $string_head = '"meta":{
             "name":"'.$nombre.'",
@@ -465,7 +548,6 @@ class fileController extends Controller
         }
         return $xml;
     }
-
     function crear_mind_jsmind($aData,$aData1,$aData2){ 
         $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
@@ -473,7 +555,6 @@ class fileController extends Controller
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
-
     function obtener_hijos_cluster($aT,$padre){ //RECIBE UN PADRE Y RETORNA TODOS SUS HIJOS
         try { //Algunos cluster no tienen hijos, por eso intento contar los hijos
             //$hijos_cluster = $aT->attributes->children;//hijos de cluster--recibe items
@@ -499,7 +580,6 @@ class fileController extends Controller
         }
 
     }
-
     function recorre_hijos($arg){
         $arreglo = array();
         $hijos = NULL;
@@ -522,7 +602,6 @@ class fileController extends Controller
             return NULL;
         }
     }
-
     function match($tmp_id,$aTrama){ //AGREGUE ESTA FUNCION
         foreach ($tmp_id as $key => $value) {
             $nodo_id = array_key_exists($key,$aTrama);
@@ -558,7 +637,6 @@ class fileController extends Controller
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
-
 
     function crear_array_hijos_jsmind_ACTION($hijos,$id){
         $json_sender_data = array();
@@ -654,8 +732,116 @@ class fileController extends Controller
         $string_nodo_root .= $string_elem_padre."]}";
         return $string_nodo_root;
     }
-    
+
+    function recorrer_xml_OBSERVATION($xml,$number){
+        try {
+            $array_state= array();
+            for ($h=0; $h < $number; $h++) { 
+                $nombre_p = $xml->children[$h]->rm_type_name;
+                $id_p = $xml->children[$h]->node_id;
+                if ((string)$nombre_p == "CLUSTER") {
+                    $cluster_description = $xml->children[$h];
+                    $hijos_cluster_description = $this->recorre_hijos($cluster_description);
+                    if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
+                        $array_state[(string)$id_p] = (string)$nombre_p;
+                    }else{
+                        $array_state[(string)$id_p] = $hijos_cluster_description;
+                    }
+                    
+                }else{
+                    $array_state[(string)$id_p] = (string)$nombre_p;
+                }
+                         
+            }
+            return $array_state;
+        } catch (\Exception $e) {
+            return NULL;
+        }
+    }
+//
+//
+//
+// FUNCIONES PARA ARQUETIPO DE TIPO OBSERVATION
+//
+//
+    function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir){
+        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = $this->crear_format_jsmind("node_tree");
+        $hijos = $this->crear_data_hijos_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir);
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
+    }
+
+    function crear_data_hijos_jsmind_OBSERVATION($padres,$array_data,$array_description,$array_protocol,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
+        //lo primero es crear el nodo root, padre de todos los demas nodos
+        //NODO ROOT
+        //$json_sender_data = array();
+        $dir_2 = NULL;
+        if($dir == "right"){
+            $dir_2 = "left";
+        }elseif($dir == "left"){
+            $dir_2 = "right";
+        }
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $string_f = (string) NULL; 
+        $string_f_pathway = (string) NULL;
+        $string_f_protocol = (string) NULL;
+        //PATHWAY
+        $id_pathway = 100;
+        $json_sender_pathway = $this->crear_array_hijos_jsmind_ACTION($array_data,$id_pathway+1);
+        //PROTOCOL
+        $id_protocol = 200;
+        $json_sender_protocol = $this->crear_array_hijos_jsmind_ACTION($array_protocol,$id_protocol+1);
+        //DESCRIPTION
+        $id_description = 300;
+        $json_sender_description = $this->crear_array_hijos_jsmind_ACTION($array_description,$id_description+1);
+        
+        $padres_split = array_chunk($padres, 1);
+        unset($padres_split[0]); //sacamos el nodo root 
+        $string_elem_padre = (string) NULL; //string final
+        foreach ($padres_split as $keya => $valuea) {
+            $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state
+            if($valuea[0] == 'protocol'){
+                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender_description); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender_description[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender_description[$i];
+                    }
+                }
+                $string_elem_padre .= $string_f."]}"; 
+            }
+            if($valuea[0] == 'data'){
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
+                for ($y=0; $y < count($json_sender_pathway); $y++) { 
+                    if($y != 0){
+                        $string_f_pathway .= ",".$json_sender_pathway[$y];
+                    }else{
+                        $string_f_pathway = '"children"'.":"."[".$json_sender_pathway[$y];
+                    }
+                }
+                $string_elem_padre .= $string_f_pathway."]}"; 
+            }
+            if($valuea[0] == 'state'){
+                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
+                for ($t=0; $t < count($json_sender_protocol); $t++) { 
+                    if($t != 0){
+                        $string_f_protocol .= ",".$json_sender_protocol[$t];
+                    }else{
+                        $string_f_protocol = '"children"'.":"."[".$json_sender_protocol[$t];
+                    }
+                }
+                $string_elem_padre .= $string_f_protocol."]}"; 
+                
+            }
+        }
+        $string_nodo_root .= $string_elem_padre."]}";
+        return $string_nodo_root;
+    }
+
 }
 
+
     
-//EVALUATION,OBSERVation
