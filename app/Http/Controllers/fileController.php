@@ -328,7 +328,58 @@ class fileController extends Controller
             
             }
             if ($tmp_tipo_arquetipo == "CLUSTER"){
-            
+                $concept = (string)$this->parser($xml)->xpath('//a:concept')[0];
+                $busca_it = $this->parser($xml)->xpath('//a:definition');
+                $busca_term_definition = $this->parser($xml)->xpath('//a:term_definitions');
+                $def_1 = NULL;$def_1_name = NULL;
+                try {
+                    $def_attributes = count($busca_it[0]->attributes);
+                } catch (\Exception $e) {
+                    echo "Arquetipo no cuenta con una etiqueta".$e->getMessage();
+                }
+                
+                if($def_attributes>=1){ //si tengo items
+                    $def_1 = $busca_it[0]->attributes[0]; //items para procesar en xml
+                    $short_def_1 = $busca_it[0]->attributes[0]->children;
+                    $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name; //items
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Archivo Imposible de procesar',
+                    ],400);
+                }
+                if($def_1 != NULL and $def_1_name != NULL){
+                    $array_items = $this->recorrer_xml_CLUSTER($def_1,count($short_def_1));
+                }
+                list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
+                //arreglo aTrama que tiene los hijos del nodo root
+                $primer_elemento_aTrama1 = reset($aTrama1);
+                $aTrama1 = array();
+                array_push($aTrama1,$primer_elemento_aTrama1);
+                array_push($aTrama1,$def_1_name);
+        
+                //funcion match para renombrar los arreglos anteriores
+                $array_items = $this->array_values_recursive($this->match($array_items,$aTrama));
+        
+                try {
+                    $json_final = $this->crear_mind_jsmind_CLUSTER($aTrama1,$array_items,"right");
+                } catch (Exception $e) {
+                    $json_final = NULL;
+                }
+                if($json_final != NULL){
+                    return response()->json([
+                        'padre' => $json_final,
+                        'status' => 'good',
+                        'msg' => 'Archivo procesado con exito',
+                        //'nombre_archetype'=>$aTrama1_padres[0],
+                    ],201);
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Archivo no encontrado',
+                    ],400);
+                }
+        
             }
             if ($tmp_tipo_arquetipo == "SECTION"){
                 
@@ -839,6 +890,110 @@ class fileController extends Controller
         }
         $string_nodo_root .= $string_elem_padre."]}";
         return $string_nodo_root;
+    }
+//
+//
+//
+// FUNCIONES PARA ARQUETIPO DE TIPO CLUSTER
+//
+//
+    function crear_mind_jsmind_CLUSTER($aData,$aData1,$dir){ //AGREGAR----------------------------------------------------
+        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = $this->crear_format_jsmind("node_tree");
+        $hijos = $this->crear_data_hijos_jsmind_CLUSTER($aData,$aData1,$dir);
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
+    }
+
+    function crear_data_hijos_jsmind_CLUSTER($padres,$array_items,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
+        //lo primero es crear el nodo root, padre de todos los demas nodos
+        //NODO ROOT
+        //$json_sender_data = array();
+        $dir_2 = NULL;
+        if($dir == "right"){
+            $dir_2 = "left";
+        }elseif($dir == "left"){
+            $dir_2 = "right";
+        }
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $string_f = (string) NULL; 
+        //PATHWAY
+        $id_pathway = 100;
+        $json_sender_items = $this->crear_array_hijos_jsmind_CLUSTER($array_items,$id_pathway+1);
+        //PROTOCOL
+
+        
+        $padres_split = array_chunk($padres, 1);
+        unset($padres_split[0]); //sacamos el nodo root 
+        $string_elem_padre = (string) NULL; //string final
+        foreach ($padres_split as $keya => $valuea) {
+            $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state
+            if($valuea[0] == 'items'){
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender_items); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender_items[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender_items[$i];
+                    }
+                }
+                $string_elem_padre .= $string_f."]}"; 
+            }
+
+        }
+        $string_nodo_root .= $string_elem_padre."]}";
+        return $string_nodo_root;
+    }
+
+    function crear_array_hijos_jsmind_CLUSTER($hijos,$id){
+        $json_sender_data = array();
+        foreach ($hijos as $keyq => $valueq) {
+            $ind = $keyq+$id;
+            $llave = (string) $ind;
+            if(is_array($valueq)== FALSE){ //Si el nodo que estoy procesando no tiene mas hijos
+                $valor = (string) $valueq;
+                array_push($json_sender_data,json_encode(array('id'=>'"'.$llave.'"',"topic"=>$valor)));
+            }else{
+                $array_con_hijos = $valueq;
+                $tmp_array_con_hijos = array();
+                $padre_array_con_hijos = $array_con_hijos[0];//mas arriba explicado, siempre el padre estara en 0
+                foreach ($array_con_hijos as $keyb =>$valueb) { //recorremos el arreglo para guardar sus hijos
+                    $ind_2 = $keyb+$id+100;
+                    $llave_kb = (string) $ind_2;
+                    array_push($tmp_array_con_hijos,array('id'=>$llave_kb,"topic"=>$valueb));
+                }
+                array_push($json_sender_data,json_encode(array('id'=>$llave,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+            }
+
+        }
+        return $json_sender_data;
+    }
+
+    function recorrer_xml_CLUSTER($xml,$number){
+        try {
+            $array_state= array();
+            for ($h=0; $h < $number; $h++) { 
+                $nombre_p = $xml->children[$h]->rm_type_name;
+                $id_p = $xml->children[$h]->node_id;
+                if ((string)$nombre_p == "CLUSTER") {
+                    $cluster_description = $xml->children[$h];
+                    $hijos_cluster_description = $this->recorre_hijos($cluster_description);
+                    if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
+                        $array_state[(string)$id_p] = (string)$nombre_p;
+                    }else{
+                        $array_state[(string)$id_p] = $hijos_cluster_description;
+                    }
+                    
+                }else{
+                    $array_state[(string)$id_p] = (string)$nombre_p;
+                }
+                         
+            }
+            return $array_state;
+        } catch (\Exception $e) {
+            return NULL;
+        }
     }
 
 }

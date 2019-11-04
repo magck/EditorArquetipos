@@ -2048,8 +2048,8 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
 
-  /*    mounted(){
-      var mind = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Blood pressure","children":[{"id":"100","topic":"data","direction":"left","children":[{"id":"\"101\"","topic":"Systolic"},{"id":"\"102\"","topic":"Diastolic"},{"id":"\"103\"","topic":"Mean arterial pressure"},{"id":"\"104\"","topic":"Pulse pressure"},{"id":"\"105\"","topic":"Clinical interpretation"},{"id":"\"106\"","topic":"Comment"}]},{"id":"200","topic":"state","direction":"left","children":[{"id":"\"201\"","topic":"Position"},{"id":"\"202\"","topic":"Confounding factors"},{"id":"\"203\"","topic":"Exertion"},{"id":"\"204\"","topic":"Sleep status"},{"id":"\"205\"","topic":"Tilt"}]},{"id":"300","topic":"protocol","direction":"right","children":[{"id":"\"301\"","topic":"Cuff size"},{"id":"\"302\"","topic":"Location of measurement"},{"id":"\"303\"","topic":"Structured measurement location"},{"id":"\"304\"","topic":"Method"},{"id":"\"305\"","topic":"Mean arterial pressure formula"},{"id":"\"306\"","topic":"Systolic pressure formula"},{"id":"\"307\"","topic":"Diastolic pressure formula"},{"id":"\"308\"","topic":"Diastolic endpoint"},{"id":"\"309\"","topic":"Device"},{"id":"\"310\"","topic":"Extension"}]}]}};
+  /*      mounted(){
+        var mind = {"meta":{ "name":"archetype", "author":"importe_editor", "version":"1.0" },"format":"node_tree","data":{"id":"root","topic":"Anatomical location","children":[{"id":"100","topic":"items","direction":"right","children":[{"id":"\"101\"","topic":"Body site name"},{"id":"\"102\"","topic":"Specific site"},{"id":"\"103\"","topic":"Laterality"},{"id":"\"104\"","topic":"Occurrence"},{"id":"\"105\"","topic":"Aspect"},{"id":"\"106\"","topic":"Anatomical Line"},{"id":"\"107\"","topic":"Description"},{"id":"\"108\"","topic":"Alternative structure"},{"id":"\"109\"","topic":"Multimedia representation"}]}]}};
       var options = {
           container:'jsmind_container',
           editable:true,

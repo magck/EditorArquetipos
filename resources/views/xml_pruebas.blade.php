@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/blood_observation.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/anatomical_cluster.xml") or die("Error al cargar el xml");
     function crear_meta_jsmind($nombre,$autor,$version){
         $string_head = '"meta":{
             "name":"'.$nombre.'",
@@ -67,10 +67,10 @@
         }
         return $xml;
     }
-    function crear_mind_jsmind($aData,$aData1,$aData2,$aData3,$dir){ //AGREGAR----------------------------------------------------
+    function crear_mind_jsmind_CLUSTER($aData,$aData1,$dir){ //AGREGAR----------------------------------------------------
         $meta = crear_meta_jsmind("archetype","importe_editor","1.0");
         $format = crear_format_jsmind("node_tree");
-        $hijos = crear_data_hijos_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir);
+        $hijos = crear_data_hijos_jsmind_CLUSTER($aData,$aData1,$dir);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
@@ -146,49 +146,6 @@
     if($tmp_tipo_arquetipo == "EVALUATION") {
     }
     if ($tmp_tipo_arquetipo == "OBSERVATION") {
-        $concept = (string)parser($xml)->xpath('//a:concept')[0];
-        $busca_it = parser($xml)->xpath('//a:definition');
-        $busca_term_definition = parser($xml)->xpath('//a:term_definitions');
-        try {
-            $def_attributes = count($busca_it[0]->attributes);
-            $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];
-        } catch (\Exception $e) {
-            echo "arquetipo no cuenta con una etiqueta".$e->getMessage();
-        }
-        
-        if($def_attributes>=2){ //si tengo data y protocol
-            $def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]; //DATA
-            $short_def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes->children;
-            $def_1_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->rm_attribute_name;
-            $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];//STATE
-            $short_def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes->children;
-            $def_2_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->rm_attribute_name;
-            $def_3 = $busca_it[0]->attributes[1]->children->attributes->children; //PROTOCOL
-            $def_3_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
-        }
-        
-        $array_data = recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes,count($short_def_1));
-        $array_state = recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes,count($short_def_2));
-        $array_protocol = recorrer_xml_OBSERVATION($busca_it[0]->attributes[1]->children->attributes,count($def_3));
-
-        list($aTrama,$aTrama1) =buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
-        //arreglo aTrama que tiene los hijos del nodo root
-        $primer_elemento_aTrama1 = reset($aTrama1);
-        $aTrama1 = array();
-        array_push($aTrama1,$primer_elemento_aTrama1);
-        array_push($aTrama1,$def_1_name);
-        array_push($aTrama1,$def_2_name);
-        array_push($aTrama1,$def_3_name);
-        //funcion match para renombrar los arreglos anteriores
-        $array_data = array_values_recursive(match($array_data,$aTrama));
-        $array_protocol = array_values_recursive(match($array_protocol,$aTrama));
-        $array_state = array_values_recursive(match($array_state,$aTrama));
-        print_format($array_data);
-        print_format($array_state);
-        print_format($array_protocol);
-        print_format($aTrama1);
-
-        echo crear_mind_jsmind($aTrama1,$array_data,$array_protocol,$array_state,"right");
 
     }
     if ($tmp_tipo_arquetipo == "INSTRUCTION") {
@@ -198,6 +155,38 @@
     }if ($tmp_tipo_arquetipo == "COMPOSITION") {
 
     }if ($tmp_tipo_arquetipo == "CLUSTER") {
+        $concept = (string)parser($xml)->xpath('//a:concept')[0];
+        $busca_it = parser($xml)->xpath('//a:definition');
+        $busca_term_definition = parser($xml)->xpath('//a:term_definitions');
+        $def_1 = NULL;$def_1_name = NULL;
+        try {
+            $def_attributes = count($busca_it[0]->attributes);
+        } catch (\Exception $e) {
+            echo "Arquetipo no cuenta con una etiqueta".$e->getMessage();
+        }
+        
+        if($def_attributes>=1){ //si tengo items
+            $def_1 = $busca_it[0]->attributes[0]; //items para procesar en xml
+            $short_def_1 = $busca_it[0]->attributes[0]->children;
+            $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name; //items
+        }
+        if($def_1 != NULL and $def_1_name != NULL){
+            $array_items = recorrer_xml_OBSERVATION($def_1,count($short_def_1));
+        }
+        list($aTrama,$aTrama1) =buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
+        //arreglo aTrama que tiene los hijos del nodo root
+        $primer_elemento_aTrama1 = reset($aTrama1);
+        $aTrama1 = array();
+        array_push($aTrama1,$primer_elemento_aTrama1);
+        array_push($aTrama1,$def_1_name);
+
+        //funcion match para renombrar los arreglos anteriores
+        $array_items = array_values_recursive(match($array_items,$aTrama));
+        print_format($array_items);
+
+        echo crear_mind_jsmind_CLUSTER($aTrama1,$array_items,"right");
+
+
 
     }if ($tmp_tipo_arquetipo == "SECTION") {
     }
@@ -256,7 +245,7 @@
         print "</pre>";
         print "\n";
     }
-    function crear_array_hijos_jsmind_ACTION($hijos,$id){
+    function crear_array_hijos_jsmind_CLUSTER($hijos,$id){
         $json_sender_data = array();
         foreach ($hijos as $keyq => $valueq) {
             $ind = $keyq+$id;
@@ -279,7 +268,7 @@
         }
         return $json_sender_data;
     }
-    function crear_data_hijos_jsmind_ACTION($padres,$array_data,$array_description,$array_protocol,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
+    function crear_data_hijos_jsmind_CLUSTER($padres,$array_items,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
         //$json_sender_data = array();
@@ -292,57 +281,29 @@
         $nodo_root = $padres[0];
         $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
-        $string_f_pathway = (string) NULL;
-        $string_f_protocol = (string) NULL;
         //PATHWAY
         $id_pathway = 100;
-        $json_sender_pathway = crear_array_hijos_jsmind_ACTION($array_data,$id_pathway+1);
+        $json_sender_items = crear_array_hijos_jsmind_CLUSTER($array_items,$id_pathway+1);
         //PROTOCOL
-        $id_protocol = 200;
-        $json_sender_protocol = crear_array_hijos_jsmind_ACTION($array_protocol,$id_protocol+1);
-        //DESCRIPTION
-        $id_description = 300;
-        $json_sender_description = crear_array_hijos_jsmind_ACTION($array_description,$id_description+1);
+
         
         $padres_split = array_chunk($padres, 1);
         unset($padres_split[0]); //sacamos el nodo root 
         $string_elem_padre = (string) NULL; //string final
         foreach ($padres_split as $keya => $valuea) {
             $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state
-            if($valuea[0] == 'protocol'){
-                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'",';
-                for ($i=0; $i < count($json_sender_description); $i++) { 
+            if($valuea[0] == 'items'){
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender_items); $i++) { 
                     if($i != 0){
-                        $string_f.=",".$json_sender_description[$i];
+                        $string_f.=",".$json_sender_items[$i];
                     }else{
-                        $string_f = '"children"'.":"."[".$json_sender_description[$i];
+                        $string_f = '"children"'.":"."[".$json_sender_items[$i];
                     }
                 }
                 $string_elem_padre .= $string_f."]}"; 
             }
-            if($valuea[0] == 'data'){
-                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
-                for ($y=0; $y < count($json_sender_pathway); $y++) { 
-                    if($y != 0){
-                        $string_f_pathway .= ",".$json_sender_pathway[$y];
-                    }else{
-                        $string_f_pathway = '"children"'.":"."[".$json_sender_pathway[$y];
-                    }
-                }
-                $string_elem_padre .= $string_f_pathway."]}"; 
-            }
-            if($valuea[0] == 'state'){
-                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
-                for ($t=0; $t < count($json_sender_protocol); $t++) { 
-                    if($t != 0){
-                        $string_f_protocol .= ",".$json_sender_protocol[$t];
-                    }else{
-                        $string_f_protocol = '"children"'.":"."[".$json_sender_protocol[$t];
-                    }
-                }
-                $string_elem_padre .= $string_f_protocol."]}"; 
-                
-            }
+
         }
         $string_nodo_root .= $string_elem_padre."]}";
         return $string_nodo_root;
