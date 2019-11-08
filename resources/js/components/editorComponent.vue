@@ -14,7 +14,7 @@
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
-                <v-btn color="red" text @click="snackbar = false">Close</v-btn>
+                <v-btn color="green" text @click="snackbar = false">Close</v-btn>
             </v-snackbar>
             </form>
             <v-subheader>Guardar en MongoDB </v-subheader>
@@ -28,7 +28,7 @@
                 <v-btn type="submit" id='guardar' color="success" dark large form="mongo_save">Guardar</v-btn>
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
-                <v-btn color="red" text @click="snackbar = false">Close</v-btn>
+                <v-btn color="green" text @click="snackbar = false">Close</v-btn>
             </v-snackbar>
             </form>
             <!-- -->
@@ -46,15 +46,14 @@
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
-                <v-btn color="red" text @click="snackbar = false">Close</v-btn>
+                <v-btn color="green" text @click="snackbar = false">Close</v-btn>
             </v-snackbar>
             </form>
             </v-flex>
             <v-flex md1>
             </v-flex>
             <v-flex md8>
-                <div id="jsmind_container">
-                </div>
+                <div id="main"></div>
             </v-flex>
 
         </v-layout>
@@ -154,9 +153,9 @@ export default {
                 let nombre_archetype = rspta.nombre_archetype;
                 console.log(padre_jsmind);                
                 var mind = JSON.parse(padre_jsmind);
-                
+                var id_container = currentObj.crearDiv();
                 var options = {
-                    container:'jsmind_container',
+                    container:id_container,
                     editable:true,
                     theme:'primary'
                 }
@@ -201,6 +200,29 @@ export default {
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
             */
+        },
+        crearDiv(self){
+            let currentObj = this;
+            var c = document.getElementById("main").childNodes.length; 
+            var div = document.createElement("div");
+            div.style.width = "800px";
+            div.style.height = "500px";
+            div.style.border = "solid 1px #ccc";
+            div.style.background = "#f4f4f4";
+            var id = c+1;
+            div.id = "jsmind_container"+id;            
+            var boton = currentObj.crearBtn();
+            document.getElementById("main").appendChild(div);
+            document.getElementById("jsmind_container"+id).appendChild(boton);
+
+            return div.id;
+        },
+        crearBtn(stringHTML){
+            var b = document.createElement("button");
+            b.style.color = "white";
+            b.style.backgroundColor = "green";
+            b.innerHTML = "guardar";
+            return b;
         },
     }
 }

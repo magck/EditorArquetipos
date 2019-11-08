@@ -2034,7 +2034,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2128,8 +2127,9 @@ __webpack_require__.r(__webpack_exports__);
         var nombre_archetype = rspta.nombre_archetype;
         console.log(padre_jsmind);
         var mind = JSON.parse(padre_jsmind);
+        var id_container = currentObj.crearDiv();
         var options = {
-          container: 'jsmind_container',
+          container: id_container,
           editable: true,
           theme: 'primary'
         };
@@ -2167,6 +2167,28 @@ __webpack_require__.r(__webpack_exports__);
        downloadAnchorNode.click();
        downloadAnchorNode.remove();
        */
+    },
+    crearDiv: function crearDiv(self) {
+      var currentObj = this;
+      var c = document.getElementById("main").childNodes.length;
+      var div = document.createElement("div");
+      div.style.width = "800px";
+      div.style.height = "500px";
+      div.style.border = "solid 1px #ccc";
+      div.style.background = "#f4f4f4";
+      var id = c + 1;
+      div.id = "jsmind_container" + id;
+      var boton = currentObj.crearBtn();
+      document.getElementById("main").appendChild(div);
+      document.getElementById("jsmind_container" + id).appendChild(boton);
+      return div.id;
+    },
+    crearBtn: function crearBtn(stringHTML) {
+      var b = document.createElement("button");
+      b.style.color = "white";
+      b.style.backgroundColor = "green";
+      b.innerHTML = "guardar";
+      return b;
     }
   }
 });
@@ -6523,7 +6545,7 @@ var render = function() {
                           _c(
                             "v-btn",
                             {
-                              attrs: { color: "red", text: "" },
+                              attrs: { color: "green", text: "" },
                               on: {
                                 click: function($event) {
                                   _vm.snackbar = false
@@ -6601,7 +6623,7 @@ var render = function() {
                           _c(
                             "v-btn",
                             {
-                              attrs: { color: "red", text: "" },
+                              attrs: { color: "green", text: "" },
                               on: {
                                 click: function($event) {
                                   _vm.snackbar = false
@@ -6688,7 +6710,7 @@ var render = function() {
                           _c(
                             "v-btn",
                             {
-                              attrs: { color: "red", text: "" },
+                              attrs: { color: "green", text: "" },
                               on: {
                                 click: function($event) {
                                   _vm.snackbar = false
@@ -6710,7 +6732,7 @@ var render = function() {
               _c("v-flex", { attrs: { md1: "" } }),
               _vm._v(" "),
               _c("v-flex", { attrs: { md8: "" } }, [
-                _c("div", { attrs: { id: "jsmind_container" } })
+                _c("div", { attrs: { id: "main" } })
               ])
             ],
             1

@@ -54,7 +54,6 @@ class fileController extends Controller
                     } catch (\Exception $e) {
                         $def_1 = NULL;
                         $def_1_name = NULL;
-
                     }
                     try {
                         $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;//DESCRIPTION
@@ -77,81 +76,62 @@ class fileController extends Controller
                     ],400);
                 }
 
-                //FOR PARA PATHWAY
+                //PATHWAY
                 if($def_1 != NULL and $def_1_name != NULL){
-                    $array_pathway = [];
-                    //print_format($def_1);
-                    for ($i=0; $i < count($def_1); $i++) { 
-                        $nombre = $busca_it[0]->attributes[0]->children[$i]->rm_type_name; //nombre todos los hijos de pathway,hasta children[$i] es cluster
-                        $id = $busca_it[0]->attributes[0]->children[$i]->node_id; //id de hijos de pathway
-                        $array_pathway[(string)$id] =(string) $nombre ; 
-                    }    
+                    $array_pathway = $this->recorrer_xml_ACTION($busca_it[0]->attributes[0],count($def_1));
                 }
 
-
-                //FOR PARA DESCRIPTION
+                //DESCRIPTION
                 if($def_2 != NULL and $def_2_name != NULL){
-                    $array_description= array();
-                
-                    for ($h=0; $h < count($def_2); $h++) { 
-                        $nombre_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->rm_type_name;
-                        $id_p = $busca_it[0]->attributes[1]->children->attributes->children[$h]->node_id;
-                        if ((string)$nombre_p == "CLUSTER") {
-                            $cluster_description = $busca_it[0]->attributes[1]->children->attributes->children[$h];
-                            $hijos_cluster_description = $this->recorre_hijos($cluster_description);
-                            if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
-                                $array_description[(string)$id_p] = (string)$nombre_p;
-                            }else{
-                                $array_description[(string)$id_p] = $hijos_cluster_description;
-                            }
-                            
-                        }else{
-                            $array_description[(string)$id_p] = (string)$nombre_p;
-                        }
-                                
-                    }
-
+                    $array_description= $this->recorrer_xml_ACTION($busca_it[0]->attributes[1]->children->attributes,count($def_2));
                 }
                 
-                //FOR PARA PROTOCOL
+                //PROTOCOL
                 if($def_3 != NULL and $def_3_name != NULL){
-                    $array_protocol = array();
-                    for ($q=0; $q < count($def_3); $q++) { 
-                        $nombre_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->rm_type_name;
-                        $id_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q]->node_id;
-                        //$array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
-                        if((string)$nombre_protocol == "CLUSTER"){
-                            $cluster_protocol = $busca_it[0]->attributes[2]->children->attributes->children[$q];
-                            $hijos_cluster_protocol = $this->recorre_hijos($cluster_protocol);
-                            if($hijos_cluster_protocol == NULL){
-                                $array_protocol[(string)$id_protocol] = (string) $nombre_protocol;
-                            }else{
-                                $array_protocol[(string)$id_protocol] = $hijos_cluster_protocol;
-                            }
-                        }else{
-                            $array_protocol[(string)$id_protocol] =(string) $nombre_protocol;
-                        }
-                    }
+                    $array_protocol = $this->recorrer_xml_ACTION($busca_it[0]->attributes[2]->children->attributes,count($def_3));
                 }
-
-
 
                 list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
                 //arreglo aTrama que tiene los hijos del nodo root
-                $primer_elemento_aTrama1 = reset($aTrama1);
-                $aTrama1 = array();
-                array_push($aTrama1,$primer_elemento_aTrama1);
-                array_push($aTrama1,$def_1_name);
-                array_push($aTrama1,$def_2_name);
-                array_push($aTrama1,$def_3_name);
+                if($aTrama1 != NULL){
+                    $primer_elemento_aTrama1 = reset($aTrama1);
+                    $aTrama1 = array();
+                    array_push($aTrama1,$primer_elemento_aTrama1);
+                    array_push($aTrama1,$def_1_name);
+                    array_push($aTrama1,$def_2_name);
+                    array_push($aTrama1,$def_3_name);
+                }
                 //funcion match para renombrar los arreglos anteriores
-                $array_pathway = $this->array_values_recursive($this->match($array_pathway,$aTrama));
-                $array_protocol = $this->array_values_recursive($this->match($array_protocol,$aTrama));
-                $array_description = $this->array_values_recursive($this->match($array_description,$aTrama));
+                if($array_pathway != NULL){
+                    $array_pathway = $this->array_values_recursive($this->match($array_pathway,$aTrama));
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Arquetipo no contiene PATHWAY',
+                    ],400);
+                }
+                if( $array_protocol != NULL){
+                    $array_protocol = $this->array_values_recursive($this->match($array_protocol,$aTrama));
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Arquetipo no contiene PROTOCOL',
+                    ],400);
+                }
+                if($array_description != NULL){
+                    $array_description = $this->array_values_recursive($this->match($array_description,$aTrama));
+                }else{
+                    return response()->json([
+                        'status' => 'error',
+                        'msg' => 'Arquetipo no contiene DESCRIPTION',
+                    ],400);
+                }
+
 
                 try {
                     $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
-                    $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo);
+                    //$aTrama1[0] tiene el nombre del arquetipo que se esta tratando
+                    $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo,$aTrama1[0]);
                 } catch (Exception $e) {
                     $json_final = NULL;
                     return response()->json([
@@ -482,7 +462,7 @@ class fileController extends Controller
                 $misuse = array("misuse",(string)$valor->misuse);
                 $copyright = array("copyright",(string)$valor->copyright); //no usado
                 $ref_for = $this->parser($xml)->xpath('//a:other_details');
-                $referencia = (string) NULL;
+                $referencia = array("references",NULL);
                 try {
                     for ($t=0; $t < count($ref_for); $t++) { 
                         if ((string)$ref_for[$t]->attributes() == 'references') {
@@ -490,17 +470,18 @@ class fileController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
-                    $referencia = NULL;
+                    $referencia = array("references",NULL);
                 }
                 $conc = $this->parser($xml)->xpath('//a:ontology');
+                $concept_description = array("Concept description",NULL);;
                 try {
                     foreach ($conc[0]->term_definitions as $ll => $vv) {
                         if((string)$vv->attributes()->language == "en"){
                             if($vv->items['code'] == $concept){
                                 try {
                                     $concept_description = array("Concept description",(string)$vv->items->items[1]);
-                                } catch (\Exception $e) {
-                                    $concept_description = NULL;
+                                } catch (\Exception $r) {
+                                    $concept_description = array("Concept description",NULL);
                                 }
                             }
                             
@@ -508,7 +489,7 @@ class fileController extends Controller
                         
                     }
                 } catch (\Exception $e) {
-                    $concept_description = NULL;
+                    $concept_description = array("Concept description",NULL);
                 }
                 $array_hijos_description = array();
                 array_push($array_hijos_description,$concept_description);
@@ -769,8 +750,8 @@ class fileController extends Controller
 // FUNCIONES PARA ARQUETIPO DE TIPO ACTION
 //
 //
-    function crear_mind_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo){ 
-        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+    function crear_mind_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo,$nombre){ 
+        $meta = $this->crear_meta_jsmind($nombre,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
         $hijos = $this->crear_data_hijos_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
@@ -781,15 +762,15 @@ class fileController extends Controller
         $json_sender_data = array();
         $ind_padre = $id;
         for ($w=0; $w < count($hijos); $w++) {
-            if($w != 0){
+            if($w > 0){
                 $ind_padre = $ind_padre+50;
                 if(is_array($hijos[$w]) == TRUE){
                     $array_con_hijos = $hijos[$w];
                     $tmp_array_con_hijos = array();
                     $padre_array_con_hijos = $array_con_hijos[0];
                     for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
-                        $ind_hijos = $ind_padre + $q;
-                        if ($q != 0) {
+                        if ($q > 0) {
+                            $ind_hijos = $ind_padre + $q;
                             array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
                         }
                     }
@@ -799,14 +780,13 @@ class fileController extends Controller
                 }
             }else{
                 if(is_array($hijos[$w]) == TRUE){
-                    echo "paso en es array";
                     $array_con_hijos = $hijos[$w];
                     $tmp_array_con_hijos = array();
                     $padre_array_con_hijos = $array_con_hijos[0];
                     for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
-                        $ind_hijos = $ind_padre + $u;
-                        if ($u != 0) {
-                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
+                        if ($u > 0) {
+                            $ind_hijos_2 = $ind_padre + $u;
+                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos_2,"topic"=>$array_con_hijos[$u]));
                         }
                     }
                     array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
@@ -820,15 +800,14 @@ class fileController extends Controller
     }
 
     function crear_data_hijos_jsmind_ACTION($padres,$array_pathway,$array_protocol,$array_description,$dir,$description_arquetipo){ //funcion que crea los hijos de root (jsmind)-------------------
-        //lo primero es crear el nodo root, padre de todos los demas nodos
-        //NODO ROOT
-        //$json_sender_data = array();
         $dir_2 = NULL;
         if($dir == "right"){
             $dir_2 = "left";
         }elseif($dir == "left"){
             $dir_2 = "right";
         }
+        //lo primero es crear el nodo root, padre de todos los demas nodos
+        //NODO ROOT
         $nodo_root = $padres[0];
         $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
@@ -838,10 +817,10 @@ class fileController extends Controller
         $id_pathway = 1000;
         $json_sender_pathway = $this->crear_array_hijos_jsmind_ACTION($array_pathway,$id_pathway+1);
         //PROTOCOL
-        $id_protocol = 2000;
+        $id_protocol = 5000;
         $json_sender_protocol = $this->crear_array_hijos_jsmind_ACTION($array_protocol,$id_protocol+1);
         //DESCRIPTION
-        $id_description = 3000;
+        $id_description = 9000;
         $json_sender_description = $this->crear_array_hijos_jsmind_ACTION($array_description,$id_description+1);
         
         $padres_split = array_chunk($padres, 1);
@@ -863,7 +842,8 @@ class fileController extends Controller
                 $string_elem_padre .= $string_f."]}"; 
             }
             if($valuea[0] == 'ism_transition'){
-                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
+                //aqui se hace cambio porque en XML dice ism_transition pero en openehr se usa pathway
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":"pathway","direction":"'.$dir_2.'",';
                 for ($y=0; $y < count($json_sender_pathway); $y++) { 
                     if($y != 0){
                         $string_f_pathway .= ",".$json_sender_pathway[$y];
@@ -892,6 +872,31 @@ class fileController extends Controller
         return $string_nodo_root;
     }
 
+    function recorrer_xml_ACTION($xml,$number){
+        try {
+            $array_state= array();
+            for ($h=0; $h < $number; $h++) { 
+                $nombre_p = $xml->children[$h]->rm_type_name;
+                $id_p = $xml->children[$h]->node_id;
+                if ((string)$nombre_p == "CLUSTER") {
+                    $cluster_description = $xml->children[$h];
+                    $hijos_cluster_description = $this->recorre_hijos($cluster_description);
+                    if($hijos_cluster_description == NULL){ //SI DEVUELVE NULL ES QUE NO TIENE MAS HIJOS
+                        $array_state[(string)$id_p] = (string)$nombre_p;
+                    }else{
+                        $array_state[(string)$id_p] = $hijos_cluster_description;
+                    }
+                    
+                }else{
+                    $array_state[(string)$id_p] = (string)$nombre_p;
+                }
+                         
+            }
+            return $array_state;
+        } catch (\Exception $e) {
+            return NULL;
+        }
+    }
 
 //
 //
