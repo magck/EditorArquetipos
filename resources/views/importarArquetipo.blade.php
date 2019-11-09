@@ -10,7 +10,7 @@
         <link href="{{asset('css/app.css')}}" rel="stylesheet"> 
         <link href="{{asset('bootstrap.js')}}" rel="stylesheet">
         <style type="text/css">
-            #jsmind_container{
+            #jsmind{
                 width:800px;
                 height:500px;
                 border:solid 1px #ccc;

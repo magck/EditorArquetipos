@@ -130,8 +130,9 @@ class fileController extends Controller
 
                 try {
                     $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
+                    $attribution_arquetipo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
                     //$aTrama1[0] tiene el nombre del arquetipo que se esta tratando
-                    $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo,$aTrama1[0]);
+                    $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo,$aTrama1[0],$attribution_arquetipo);
                 } catch (Exception $e) {
                     $json_final = NULL;
                     return response()->json([
@@ -502,7 +503,7 @@ class fileController extends Controller
                     $ide_description = 200;
                     $hijos_description = $this->crear_array_hijos_jsmind_CLUSTER($array_hijos_description,$ide_description+1);
                     
-                    $string_description = '{"id":"'.$ide_description.'","topic":"description","direction":"right","children":[';
+                    $string_description = '{"id":"'.$ide_description.'","topic":"Description","direction":"right","children":[';
                     for ($e=0; $e < count($hijos_description); $e++) {
                         if($e != 0){
                             $string_description.= ",".$hijos_description[$e];
@@ -518,6 +519,176 @@ class fileController extends Controller
                 return $string_description;
             }
         }
+    }
+    function crear_attribution_jsmind_ATTRIBUTION($xml,$concept){
+        $archetype_id = array("Archetype ID",NULL);
+        $other_Identification = array("Other Identification",NULL);
+        $original_author =array("Original Author",NULL);
+        $current_custodian = array("Current Custodian",NULL);
+        $other_contributors = array("Other Contributos",NULL);
+        $translators = array("Translators",NULL);
+        $licencing = array("Licencing",NULL);
+        try {
+            $ruta_archetype = (string)$this->parser($xml)->xpath('//a:archetype_id')[0]->value;
+            $archetype_id = array("Archetype ID:",$ruta_archetype);
+        } catch (\Exception $e) {
+            $archetype_id = array("Archetype ID:",NULL);
+        }
+        try {
+            $M_V_ID = "Major Version ID:".(string) $this->parser($xml)->xpath('//a:uid')[0]->value;
+            $ref_other_d =$this->parser($xml)->xpath('//a:other_details');
+            $other_details_MDI = (string) NULL;
+            $other_details_build_uid = (string) NULL;
+            try {
+                for ($t=0; $t < count($ref_other_d); $t++) { 
+                    if ((string)$ref_other_d[$t]->attributes() == 'MD5-CAM-1.0.1') {
+                        $other_details_MDI = "Canonical MD5 Hash:".(string)$ref_other_d[$t][0];
+                    }
+                    if ((string)$ref_other_d[$t]->attributes() == 'build_uid') {
+                        $other_details_build_uid = "Build Uid:".(string)$ref_other_d[$t][0];
+                    }
+                }
+                $strin_final_identification = $M_V_ID.",".$other_details_MDI.",".$other_details_build_uid;
+                $other_Identification = array("Other Identification:",$strin_final_identification);  
+            } catch (\Exception $e) {
+                $other_details_MDI = (string) NULL;
+                $other_details_build_uid = (string) NULL;
+            }
+        } catch (\Exception $e) {
+            $other_Identification = array("Other Identification",NULL);
+        }
+        try {
+            $ref_original_autor = $this->parser($xml)->xpath('//a:original_author');
+            $original_autor_date = (string) NULL;
+            $original_autor_name = (string) NULL;
+            $original_autor_organisation = (string) NULL;
+            $original_autor_email = (string) NULL;
+            try {
+                for ($h=0; $h < count($ref_original_autor); $h++) { 
+                    if((string)$ref_original_autor[$h]->attributes() == "date"){
+                        $original_autor_date = "Date original authored:".(string)$ref_original_autor[$h][0];
+                    }
+                    if((string)$ref_original_autor[$h]->attributes() == "name"){
+                        $original_autor_name = "Author name:".(string)$ref_original_autor[$h][0];
+                    }
+                    if((string)$ref_original_autor[$h]->attributes() == "organisation"){
+                        $original_autor_organisation = "Organisation:".(string)$ref_original_autor[$h][0];
+                    }
+                    if((string)$ref_original_autor[$h]->attributes() == "email"){
+                        $original_autor_email = "Email:".(string)$ref_original_autor[$h][0];
+                    }
+                }
+                $string_final_original_author = $original_autor_name.",".$original_autor_organisation.",".$original_autor_email.",".$original_autor_date;
+                $original_author =array("Original Author",$string_final_original_author);
+            } catch (\Exception $e) {
+                $original_author =array("Original Author",NULL);
+            }
+        } catch (\Exception $e) {
+            $original_author =array("Original Author",NULL);
+        }
+        try {
+            $ref_custodian = $this->parser($xml)->xpath('//a:other_details');
+            $custodian_namespace = (string) NULL;
+            $custodian_organisation = (string) NULL;
+            $custodian_contact = (string) NULL;
+            try {
+                for ($p=0; $p < count($ref_custodian); $p++) { 
+                    if((string)$ref_custodian[$p]->attributes() == "custodian_organisation"){
+                        $custodian_organisation = "Custodian Organisation:".(string)$ref_custodian[$p][0];
+                    }
+                    if((string)$ref_custodian[$p]->attributes() == "custodian_namespace"){
+                        $custodian_namespace = "Custodian Namespace:".(string)$ref_custodian[$p][0];
+                    }
+                    if((string)$ref_custodian[$p]->attributes() == "current_contact"){
+                        $custodian_contact = "Custodian contact:".(string)$ref_custodian[$p][0];
+                    }
+                }
+                $string_final_custodian= $custodian_organisation.",".$custodian_namespace.",".$custodian_contact.",";
+                $current_custodian = array("Current Custodian",$string_final_custodian);
+            } catch (\Exception $e) {
+                $current_custodian = array("Current Custodian",NULL);
+            }
+        } catch (\Exception $h) {
+            $current_custodian = array("Current Custodian",NULL);
+        }
+        try {
+            $ref_contri = $this->parser($xml)->xpath('//a:other_contributors');
+            $string_contri = (string) NULL;
+            try {
+                for ($n=0; $n < count($ref_contri); $n++) { 
+                   if($n >0){
+                    $string_contri .= "&& ".$ref_contri[$n]." ";
+                   }else{
+                    $string_contri .= $ref_contri[$n]." ";
+                   }
+                }
+                $other_contributors = array("Other Contributos",$string_contri);
+            } catch (\Exception $e) {
+                $other_contributors = array("Other Contributos",NULL);
+            }
+        } catch (\Exception $u) {
+            $other_contributors = array("Other Contributos",NULL);
+        }
+        try {
+            $translations = $this->parser($xml)->xpath("//a:translations");
+            $sting_autor_translations = (string) NULL;
+            for ($s=0; $s < count($translations); $s++) { 
+                $lenguage = $translations[$s]->language->code_string;
+                $athor_for = $translations[$s]->author;
+                for ($g=0; $g < count($athor_for); $g++) { 
+                    if ($g > 0) {
+                        $sting_autor_translations .= ",".$athor_for[$g]." ";
+                    }else{
+                        $sting_autor_translations .= "(".$lenguage."): ".$athor_for[$g];
+                    }
+                }
+            }
+            $translators = array("Translators",$sting_autor_translations);
+        } catch (\Exception $e) {
+            $translators = array("Translators",NULL);
+        }
+        try {
+            $licencia = $this->parser($xml)->xpath("//a:details");
+            $lic = $this->parser($xml)->xpath("//a:other_details");
+            for ($m=0; $m < count($licencia); $m++) { 
+                if((string)$licencia[$m]->language->code_string == "en"){
+                    $copy = "Copyright: ".(string)$licencia[$m]->copyright." ";
+                }
+            }
+            for ($w=0; $w < count($lic); $w++) { 
+                if((string)$lic[$w]->attributes() == "licence"){
+                    $licencia_arquetipo = "Licence: ".(string)$lic[$w][0];
+                }
+            }
+            $string_final_licence = $copy.$licencia_arquetipo;
+            $licencing = array("Licencing",$string_final_licence);
+        } catch (\Exception $u) {
+            $licencing = array("Licencing",NULL);
+        }
+        $array_hijos_attibution = array();
+        array_push($array_hijos_attibution,$archetype_id);
+        array_push($array_hijos_attibution,$other_Identification);
+        array_push($array_hijos_attibution,$original_author);
+        array_push($array_hijos_attibution,$current_custodian);
+        array_push($array_hijos_attibution,$other_contributors);
+        array_push($array_hijos_attibution,$translators);
+        array_push($array_hijos_attibution,$licencing);
+        try {
+            $id_attribution = 10000;
+            $hijos_attribution = $this->crear_array_hijos_jsmind_CLUSTER($array_hijos_attibution,$id_attribution+1);
+            $string_attribution = '{"id":"'.$id_attribution.'","topic":"Attribution","direction":"right","children":[';
+            for ($t=0; $t < count($hijos_attribution); $t++) {
+                if($t != 0){
+                    $string_attribution.= ",".$hijos_attribution[$t];
+                }else{
+                    $string_attribution.= $hijos_attribution[$t];
+                }
+            }
+            $string_attribution .= "]}"; //ESTE ES EL STRING FINAL 
+        } catch (\Exception $e) {
+            return NULL;
+        }
+        return $string_attribution;
     }
     function crear_array_hijos_jsmind($hijos,$id){
         $json_sender_data = array();
@@ -750,10 +921,10 @@ class fileController extends Controller
 // FUNCIONES PARA ARQUETIPO DE TIPO ACTION
 //
 //
-    function crear_mind_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo,$nombre){ 
+    function crear_mind_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo,$nombre,$attribution_arquetipo){ 
         $meta = $this->crear_meta_jsmind($nombre,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
-        $hijos = $this->crear_data_hijos_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo);
+        $hijos = $this->crear_data_hijos_jsmind_ACTION($aData,$aData1,$aData2,$aData3,$dir,$description_arquetipo,$attribution_arquetipo);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
@@ -799,7 +970,7 @@ class fileController extends Controller
         return $json_sender_data;     
     }
 
-    function crear_data_hijos_jsmind_ACTION($padres,$array_pathway,$array_protocol,$array_description,$dir,$description_arquetipo){ //funcion que crea los hijos de root (jsmind)-------------------
+    function crear_data_hijos_jsmind_ACTION($padres,$array_pathway,$array_protocol,$array_description,$dir,$description_arquetipo,$attribution_arquetipo){ //funcion que crea los hijos de root (jsmind)-------------------
         $dir_2 = NULL;
         if($dir == "right"){
             $dir_2 = "left";
@@ -868,7 +1039,9 @@ class fileController extends Controller
         }
         //$string_nodo_root .= $string_elem_padre."]}";
         $string_nodo_root .= $string_elem_padre;
+        $string_nodo_root .= ",".$attribution_arquetipo;
         $string_nodo_root .= ",".$description_arquetipo."]}"; ;
+        
         return $string_nodo_root;
     }
 
