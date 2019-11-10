@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/anatomical_cluster.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/absence_evaluation.xml") or die("Error al cargar el xml");
     function crear_meta_jsmind($nombre,$autor,$version){
         $string_head = '"meta":{
             "name":"'.$nombre.'",
@@ -144,6 +144,11 @@
     if($tmp_tipo_arquetipo == "ACTION"){
     }
     if($tmp_tipo_arquetipo == "EVALUATION") {
+        $concept = (string)parser($xml)->xpath('//a:concept')[0];
+        $descripcion_de_xml = crear_description_jsmind_DESCRIPTION($xml,$concept);
+        $attribution = crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
+        print_format($descripcion_de_xml);
+        print_format($attribution);
     }
     if ($tmp_tipo_arquetipo == "OBSERVATION") {
 
@@ -155,6 +160,7 @@
     }if ($tmp_tipo_arquetipo == "COMPOSITION") {
 
     }if ($tmp_tipo_arquetipo == "CLUSTER") {
+
         $concept = (string)parser($xml)->xpath('//a:concept')[0];
         $busca_it = parser($xml)->xpath('//a:definition');
         $busca_term_definition = parser($xml)->xpath('//a:term_definitions');
@@ -436,7 +442,6 @@
                 }
             }
             $string_attribution .= "]}"; //ESTE ES EL STRING FINAL 
-            print_format($string_attribution);
         } catch (\Exception $e) {
             return NULL;
         }

@@ -47,48 +47,50 @@ class fileController extends Controller
                 $busca_term_definition = $this->parser($xml)->xpath('//a:term_definitions');
                 $def_attributes = count($busca_it[0]->attributes);
                 $def_1 = NULL;$def_2 = NULL;$def_3 = NULL;
-                if($def_attributes>=3){
-                    try {
-                        $def_1 = $busca_it[0]->attributes[0]->children; //PATHWAY
-                        $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
-                    } catch (\Exception $e) {
-                        $def_1 = NULL;
-                        $def_1_name = NULL;
-                    }
-                    try {
-                        $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;//DESCRIPTION
-                        $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
-                    } catch (\Exception $e) {
-                        $def_2 = NULL;
-                        $def_2_name = NULL;
-                    }
-                    try {
-                        $def_3 = $busca_it[0]->attributes[2]->children->attributes->children; //PROTOCOL
-                        $def_3_name =(string) $busca_it[0]->attributes[2]->rm_attribute_name;
-                    } catch (\Exception $e) {
-                        $def_3 = NULL;
-                        $def_3_name = NULL;
-                    }
-                }else{
-                    return response()->json([
-                        'status' => 'error',
-                        'msg' => 'Arquetipo imposible de procesar.',
-                    ],400);
+                $def_1_name = NULL;$def_2_name = NULL;$def_3_name = NULL;
+                
+                try {
+                    $def_1 = $busca_it[0]->attributes[0]->children; //PATHWAY
+                    $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
+                } catch (\Exception $e) {
+                    $def_1 = NULL;
+                    $def_1_name = NULL;
                 }
+                try {
+                    $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;//DESCRIPTION
+                    $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+                } catch (\Exception $e) {
+                    $def_2 = NULL;
+                    $def_2_name = NULL;
+                }
+                try {
+                    $def_3 = $busca_it[0]->attributes[2]->children->attributes->children; //PROTOCOL
+                    $def_3_name =(string) $busca_it[0]->attributes[2]->rm_attribute_name;
+                } catch (\Exception $e) {
+                    $def_3 = NULL;
+                    $def_3_name = NULL;
+                }
+                
 
                 //PATHWAY
                 if($def_1 != NULL and $def_1_name != NULL){
                     $array_pathway = $this->recorrer_xml_ACTION($busca_it[0]->attributes[0],count($def_1));
+                }else{
+                    $array_pathway = NULL;
                 }
 
                 //DESCRIPTION
                 if($def_2 != NULL and $def_2_name != NULL){
                     $array_description= $this->recorrer_xml_ACTION($busca_it[0]->attributes[1]->children->attributes,count($def_2));
+                }else{
+                    $array_description = NULL;
                 }
                 
                 //PROTOCOL
                 if($def_3 != NULL and $def_3_name != NULL){
                     $array_protocol = $this->recorrer_xml_ACTION($busca_it[0]->attributes[2]->children->attributes,count($def_3));
+                }else{
+                    $array_protocol = NULL;
                 }
 
                 list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
@@ -105,35 +107,37 @@ class fileController extends Controller
                 if($array_pathway != NULL){
                     $array_pathway = $this->array_values_recursive($this->match($array_pathway,$aTrama));
                 }else{
-                    return response()->json([
+                    $array_pathway = array();
+                    /*return response()->json([
                         'status' => 'error',
                         'msg' => 'Arquetipo no contiene PATHWAY',
-                    ],400);
+                    ],400);*/
                 }
                 if( $array_protocol != NULL){
                     $array_protocol = $this->array_values_recursive($this->match($array_protocol,$aTrama));
                 }else{
-                    return response()->json([
+                    $array_protocol = array();
+                    /*return response()->json([
                         'status' => 'error',
                         'msg' => 'Arquetipo no contiene PROTOCOL',
-                    ],400);
+                    ],400);*/
                 }
                 if($array_description != NULL){
                     $array_description = $this->array_values_recursive($this->match($array_description,$aTrama));
                 }else{
-                    return response()->json([
+                    $array_description = array();
+                    /*return response()->json([
                         'status' => 'error',
                         'msg' => 'Arquetipo no contiene DESCRIPTION',
-                    ],400);
+                    ],400);*/
                 }
-
-
+                $array_info = array($array_pathway,$array_description,$array_protocol);
                 try {
                     $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
                     $attribution_arquetipo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
                     //$aTrama1[0] tiene el nombre del arquetipo que se esta tratando
                     $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo,$aTrama1[0],$attribution_arquetipo);
-                } catch (Exception $e) {
+                }catch (Exception $e) {
                     $json_final = NULL;
                     return response()->json([
                         'status' => 'error',
@@ -144,12 +148,38 @@ class fileController extends Controller
                     return response()->json([
                         'padre' => $json_final,
                         'status' => 'good',
-                        'msg' => 'Archivo procesado con exito',
-                    ],201);
+                        'msg' => 'Archivo procesado con exito.',
+                    ],201);   
+                    /*if($array_info[0] == array() and $array_info[1] != array() and $array_info[2] != array()){
+                        return response()->json([
+                            'padre' => $json_final,
+                            'status' => 'good',
+                            'msg' => 'Archivo procesado con exito(No contiene Pathway)',
+                        ],201);
+                    }elseif($array_info[1] == array() and $array_info[0] != array() and $array_info[2] != array() ){
+                        return response()->json([
+                            'padre' => $json_final,
+                            'status' => 'good',
+                            'msg' => 'Archivo procesado con exito(No contiene Description)',
+                        ],201);
+                    }elseif($array_info[2] == array() and $array_info[1] != array() and $array_info[0] != array()){
+                        return response()->json([
+                            'padre' => $json_final,
+                            'status' => 'good',
+                            'msg' => 'Archivo procesado con exito(No contiene Protocol)',
+                        ],201);
+                    }else{
+                        return response()->json([
+                            'padre' => $json_final,
+                            'status' => 'good',
+                            'msg' => 'Archivo procesado con exito.',
+                        ],201);   
+                    }*/
+
                 }else{
                     return response()->json([
                         'status' => 'error',
-                        'msg' => 'Archivo no encontrado',
+                        'msg' => 'Archivo XML imposible de procesar',
                     ],400);
                 }
 
@@ -185,8 +215,6 @@ class fileController extends Controller
                         }else{
                             $tmp_id[(string)$id] = $nombre;
                         }
-            
-            
                     }    
                     //FOR PROTOCOL
                     $tmp_pro= array();//AGREGUE ESTE FOR
@@ -226,7 +254,9 @@ class fileController extends Controller
                 $aTrama3_hijos_c = $this->array_values_recursive($hijos_protocol);
 
                 try {
-                    $json_final = $this->crear_mind_jsmind($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right");
+                    $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
+                    $attribution_arquetipo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
+                    $json_final = $this->crear_mind_jsmind_EVALUATION($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right",$description_arquetipo,$attribution_arquetipo);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -235,7 +265,6 @@ class fileController extends Controller
                         'padre' => $json_final,
                         'status' => 'good',
                         'msg' => 'Archivo procesado con exito',
-                        //'nombre_archetype'=>$aTrama1_padres[0],
                     ],201);
                 }else{
                     return response()->json([
@@ -932,42 +961,46 @@ class fileController extends Controller
     function crear_array_hijos_jsmind_ACTION($hijos,$id){
         $json_sender_data = array();
         $ind_padre = $id;
-        for ($w=0; $w < count($hijos); $w++) {
-            if($w > 0){
-                $ind_padre = $ind_padre+50;
-                if(is_array($hijos[$w]) == TRUE){
-                    $array_con_hijos = $hijos[$w];
-                    $tmp_array_con_hijos = array();
-                    $padre_array_con_hijos = $array_con_hijos[0];
-                    for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
-                        if ($q > 0) {
-                            $ind_hijos = $ind_padre + $q;
-                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+        if(is_array($hijos) == TRUE and count($hijos)>1){
+            for ($w=0; $w < count($hijos); $w++) {
+                if($w > 0){
+                    $ind_padre = $ind_padre+50;
+                    if(is_array($hijos[$w]) == TRUE){
+                        $array_con_hijos = $hijos[$w];
+                        $tmp_array_con_hijos = array();
+                        $padre_array_con_hijos = $array_con_hijos[0];
+                        for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
+                            if ($q > 0) {
+                                $ind_hijos = $ind_padre + $q;
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+                            }
                         }
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                    }else{
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                 }else{
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
-                }
-            }else{
-                if(is_array($hijos[$w]) == TRUE){
-                    $array_con_hijos = $hijos[$w];
-                    $tmp_array_con_hijos = array();
-                    $padre_array_con_hijos = $array_con_hijos[0];
-                    for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
-                        if ($u > 0) {
-                            $ind_hijos_2 = $ind_padre + $u;
-                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos_2,"topic"=>$array_con_hijos[$u]));
+                    if(is_array($hijos[$w]) == TRUE){
+                        $array_con_hijos = $hijos[$w];
+                        $tmp_array_con_hijos = array();
+                        $padre_array_con_hijos = $array_con_hijos[0];
+                        for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
+                            if ($u > 0) {
+                                $ind_hijos_2 = $ind_padre + $u;
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos_2,"topic"=>$array_con_hijos[$u]));
+                            }
                         }
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                    }else{
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
-                }else{
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
-                }
-            } 
-
+                } 
+    
+            }
+            return $json_sender_data; 
+        }else{
+            return $json_sender_data; 
         }
-        return $json_sender_data;     
     }
 
     function crear_data_hijos_jsmind_ACTION($padres,$array_pathway,$array_protocol,$array_description,$dir,$description_arquetipo,$attribution_arquetipo){ //funcion que crea los hijos de root (jsmind)-------------------
@@ -1002,7 +1035,7 @@ class fileController extends Controller
             $elemento = '"'.$valuea[0].'"'; //puede tomar pathway,description, protocol
             //echo $valuea[0];
             if($valuea[0] == 'description'){
-                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'"';
                 for ($i=0; $i < count($json_sender_description); $i++) { 
                     if($i != 0){
                         $string_f.=",".$json_sender_description[$i];
@@ -1010,11 +1043,16 @@ class fileController extends Controller
                         $string_f = '"children"'.":"."[".$json_sender_description[$i];
                     }
                 }
-                $string_elem_padre .= $string_f."]}"; 
+                if($string_f == (string) NULL){
+                    $string_elem_padre .= $string_f."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f."]}"; 
+                }
+                
             }
             if($valuea[0] == 'ism_transition'){
                 //aqui se hace cambio porque en XML dice ism_transition pero en openehr se usa pathway
-                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":"pathway","direction":"'.$dir_2.'",';
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":"pathway","direction":"'.$dir_2.'"';
                 for ($y=0; $y < count($json_sender_pathway); $y++) { 
                     if($y != 0){
                         $string_f_pathway .= ",".$json_sender_pathway[$y];
@@ -1022,10 +1060,15 @@ class fileController extends Controller
                         $string_f_pathway = '"children"'.":"."[".$json_sender_pathway[$y];
                     }
                 }
-                $string_elem_padre .= $string_f_pathway."]}"; 
+                if($string_f_pathway == (string) NULL){
+                    $string_elem_padre .= $string_f_pathway."}"; 
+                }else{
+                    $string_elem_padre .= ",".$string_f_pathway."]}"; 
+                }
+                
             }
             if($valuea[0] == 'protocol'){
-                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
+                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
                 for ($t=0; $t < count($json_sender_protocol); $t++) { 
                     if($t != 0){
                         $string_f_protocol .= ",".$json_sender_protocol[$t];
@@ -1033,15 +1076,23 @@ class fileController extends Controller
                         $string_f_protocol = '"children"'.":"."[".$json_sender_protocol[$t];
                     }
                 }
-                $string_elem_padre .= $string_f_protocol."]}"; 
-                
+                if($string_f_protocol == (string) NULL){
+                    $string_elem_padre .= $string_f_protocol."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_protocol."]}";
+                }
             }
         }
         //$string_nodo_root .= $string_elem_padre."]}";
-        $string_nodo_root .= $string_elem_padre;
-        $string_nodo_root .= ",".$attribution_arquetipo;
-        $string_nodo_root .= ",".$description_arquetipo."]}"; ;
-        
+        if($string_elem_padre == (string) NULL){
+            $string_nodo_root .= $string_elem_padre;
+            $string_nodo_root .= $attribution_arquetipo;
+            $string_nodo_root .= ",".$description_arquetipo."]}"; ;
+        }else{
+            $string_nodo_root .= $string_elem_padre;
+            $string_nodo_root .= ",".$attribution_arquetipo;
+            $string_nodo_root .= ",".$description_arquetipo."]}"; ;
+        }
         return $string_nodo_root;
     }
 
@@ -1076,6 +1127,129 @@ class fileController extends Controller
 //
 // FUNCIONES PARA ARQUETIPO DE TIPO OBSERVATION
 //
+// 
+    function crear_mind_jsmind_EVALUATION($aData,$aData1,$aData2,$dir,$description_arquetipo,$attribution_arquetipo){
+        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = $this->crear_format_jsmind("node_tree");
+        $hijos = $this->crear_data_hijos_jsmind_EVALUATION($aData,$aData1,$aData2,$dir,$description_arquetipo,$attribution_arquetipo);
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
+    }
+
+    function crear_array_hijos_jsmind_EVALUATION($hijos,$id){
+        $json_sender_data = array();
+        $ind_padre = $id;
+        if(is_array($hijos) == TRUE and count($hijos)>1){
+            for ($w=0; $w < count($hijos); $w++) {
+                if($w > 0){
+                    $ind_padre = $ind_padre+50;
+                    if(is_array($hijos[$w]) == TRUE){
+                        $array_con_hijos = $hijos[$w];
+                        $tmp_array_con_hijos = array();
+                        $padre_array_con_hijos = $array_con_hijos[0];
+                        for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
+                            if ($q > 0) {
+                                $ind_hijos = $ind_padre + $q;
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+                            }
+                        }
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                    }else{
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                    }
+                }else{
+                    if(is_array($hijos[$w]) == TRUE){
+                        $array_con_hijos = $hijos[$w];
+                        $tmp_array_con_hijos = array();
+                        $padre_array_con_hijos = $array_con_hijos[0];
+                        for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
+                            if ($u > 0) {
+                                $ind_hijos_2 = $ind_padre + $u;
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos_2,"topic"=>$array_con_hijos[$u]));
+                            }
+                        }
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                    }else{
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                    }
+                } 
+    
+            }
+            return $json_sender_data; 
+        }else{
+            return $json_sender_data; 
+        }
+    }
+
+    function crear_data_hijos_jsmind_EVALUATION($padres,$hijos,$hijos_prot,$dir,$description_arquetipo,$attribution_arquetipo){
+        //lo primero es crear el nodo root, padre de todos los demas nodos
+        //NODO ROOT
+        //$json_sender_data = array();
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $string_f = (string) NULL; 
+        $string_f_p = (string) NULL;
+        //DATA
+        $id_data = 1000;
+        $json_sender_data = $this->crear_array_hijos_jsmind_EVALUATION($hijos,$id_data+1);
+        //PROTOCOL
+        $id_protocol = 5000;
+        $json_sender_protocol = $this->crear_array_hijos_jsmind_EVALUATION($hijos_prot,$id_protocol+1);
+
+        $padres_split = array_chunk($padres, 1);//spliteamos nodoroot,data,protocol array(1=>array([0]=>data),
+                                                                                        //2=>array([0]=>protocol))
+        unset($padres_split[0]); //sacamos el nodo root 
+        $string_elem_padre = (string) NULL; //string final
+        foreach($padres_split as $keya => $valuea){ //recorrimos data,protocol
+            $elemento = '"'.$valuea[0].'"'; //puede tomar data o protocol
+            if($valuea[0] == 'data'){
+                $string_elem_padre .= '{"id":"'.$id_data.'","topic":'.$elemento.',"direction":"'.$dir.'"';
+                for ($i=0; $i < count($json_sender_data); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender_data[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender_data[$i];
+                    }
+                }
+                if($string_f == (string) NULL){
+                    $string_elem_padre .= $string_f."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f."]}"; 
+                }
+            }
+            else{
+                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"left"';
+                for ($x=0; $x < count($json_sender_protocol); $x++) { 
+                    if($x != 0){
+                        $string_f_p .= ",".$json_sender_protocol[$x];
+                    }else{
+                        $string_f_p = '"children"'.":"."[".$json_sender_protocol[$x];
+                    }
+                }
+                if($string_f_p == (string) NULL){
+                    $string_elem_padre .= $string_f_p."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_p."]}";
+                }
+            }
+        }
+        if($string_elem_padre == (string) NULL){
+            $string_nodo_root .= $attribution_arquetipo;
+            $string_nodo_root .= ",".$description_arquetipo."]}";
+        }else{
+            $string_nodo_root .= $string_elem_padre;
+            $string_nodo_root .= ",".$attribution_arquetipo;
+            $string_nodo_root .= ",".$description_arquetipo."]}";
+        }
+        return $string_nodo_root;
+    }
+
+
+//
+//
+//
+// FUNCIONES PARA ARQUETIPO DE TIPO OBSERVATION
+//
 //
     function recorrer_xml_OBSERVATION($xml,$number){
         try {
@@ -1102,6 +1276,7 @@ class fileController extends Controller
             return NULL;
         }
     }
+
     function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir){
         $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
