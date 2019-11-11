@@ -256,7 +256,7 @@ class fileController extends Controller
                 try {
                     $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
                     $attribution_arquetipo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
-                    $json_final = $this->crear_mind_jsmind_EVALUATION($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right",$description_arquetipo,$attribution_arquetipo);
+                    $json_final = $this->crear_mind_jsmind_EVALUATION($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right",$description_arquetipo,$attribution_arquetipo,$aTrama1_padres[0]);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -313,7 +313,7 @@ class fileController extends Controller
                 $array_state = $this->array_values_recursive($this->match($array_state,$aTrama));
 
                try {
-                    $json_final = $this->crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_state,"right");
+                    $json_final = $this->crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_state,"right",$aTrama1[0]);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -372,7 +372,7 @@ class fileController extends Controller
                 $array_items = $this->array_values_recursive($this->match($array_items,$aTrama));
         
                 try {
-                    $json_final = $this->crear_mind_jsmind_CLUSTER($aTrama1,$array_items,"right");
+                    $json_final = $this->crear_mind_jsmind_CLUSTER($aTrama1,$array_items,"right",$aTrama1[0]);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -826,6 +826,8 @@ class fileController extends Controller
             switch ((string) $nodo['language']) {
                 case $idioma:
                     $mykey = $key;
+                case "ja":
+                    $mykey = $key;
             }  
         }
         $tmp = $padre[$mykey]->items;
@@ -1128,8 +1130,8 @@ class fileController extends Controller
 // FUNCIONES PARA ARQUETIPO DE TIPO OBSERVATION
 //
 // 
-    function crear_mind_jsmind_EVALUATION($aData,$aData1,$aData2,$dir,$description_arquetipo,$attribution_arquetipo){
-        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+    function crear_mind_jsmind_EVALUATION($aData,$aData1,$aData2,$dir,$description_arquetipo,$attribution_arquetipo,$nombre_a){
+        $meta = $this->crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
         $hijos = $this->crear_data_hijos_jsmind_EVALUATION($aData,$aData1,$aData2,$dir,$description_arquetipo,$attribution_arquetipo);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
@@ -1277,8 +1279,8 @@ class fileController extends Controller
         }
     }
 
-    function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir){
-        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+    function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir,$nombre_a){
+        $meta = $this->crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
         $hijos = $this->crear_data_hijos_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
@@ -1359,8 +1361,8 @@ class fileController extends Controller
 // FUNCIONES PARA ARQUETIPO DE TIPO CLUSTER
 //
 //
-    function crear_mind_jsmind_CLUSTER($aData,$aData1,$dir){ //AGREGAR----------------------------------------------------
-        $meta = $this->crear_meta_jsmind("archetype","importe_editor","1.0");
+    function crear_mind_jsmind_CLUSTER($aData,$aData1,$dir,$nombre_a){ //AGREGAR----------------------------------------------------
+        $meta = $this->crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
         $hijos = $this->crear_data_hijos_jsmind_CLUSTER($aData,$aData1,$dir);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';

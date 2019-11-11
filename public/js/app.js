@@ -2042,7 +2042,8 @@ __webpack_require__.r(__webpack_exports__);
       multiLine: true,
       text: '',
       data: '',
-      nombre_arch_expor: ''
+      nombre_arch_expor: '',
+      arquetipos_actuales: []
     };
   },
 
@@ -2135,6 +2136,10 @@ __webpack_require__.r(__webpack_exports__);
         var jm = jsMind.show(options, mind);
         jm.collapse_all();
         currentObj.data = jm;
+        var obj = {};
+        obj[id_container] = jm;
+        currentObj.arquetipos_actuales.push(obj);
+        console.log(currentObj.arquetipos_actuales);
       })["catch"](function (error) {
         var mensaje_error = error.response.data.msg;
         currentObj.snackbar = true;
@@ -2145,7 +2150,7 @@ __webpack_require__.r(__webpack_exports__);
         console.log(error.response.headers);
       });
     },
-    exportar: function exportar(formulario) {
+    exportar: function exportar(formulario, id_nodo) {
       formulario.preventDefault();
       var currentObj = this;
       var mind_data = currentObj.data.get_data('node_array');
@@ -2167,9 +2172,10 @@ __webpack_require__.r(__webpack_exports__);
        downloadAnchorNode.remove();
        */
     },
-    crearDiv: function crearDiv(self) {
+    crearDiv: function crearDiv(id) {
       var currentObj = this;
-      var c = document.getElementById("main").childNodes.length;
+      var c = document.getElementById("main").getElementsByTagName('div').length;
+      var x = document.getElementById("main").getElementsByTagName('div');
       var div = document.createElement("div");
       div.style.width = "800px";
       div.style.height = "500px";
@@ -2177,20 +2183,51 @@ __webpack_require__.r(__webpack_exports__);
       div.style.background = "#f4f4f4";
       var id = c + 1;
       div.id = "jsmind_container" + id;
-      var boton = currentObj.crearBtn(id);
+      var id_btn = div.id;
+      var boton = currentObj.crearBtn(id_btn, "Guardar", 0);
+      var boton_exportar = currentObj.crearBtn(id_btn, "Exportar", 1);
       var q = document.createElement("br");
       document.getElementById("main").appendChild(q);
       document.getElementById("main").appendChild(div);
-      document.getElementById("jsmind_container" + id).appendChild(boton);
+      document.getElementById(div.id).appendChild(boton);
+      document.getElementById(div.id).appendChild(document.createElement("br"));
+      document.getElementById(div.id).appendChild(document.createElement("br"));
+      document.getElementById(div.id).appendChild(boton_exportar);
+      document.getElementById("main").appendChild(document.createElement("br"));
+      document.getElementById("main").appendChild(document.createElement("br"));
+      document.getElementById("main").appendChild(document.createElement("br"));
       return div.id;
     },
-    crearBtn: function crearBtn(id) {
-      var b = document.createElement("button");
-      b.style.color = "white";
-      b.id = "jsmind_container" + id + "_button";
-      b.style.backgroundColor = "green";
-      b.innerHTML = "guardar";
-      return b;
+    crearBtn: function crearBtn(id_btn, texto, tipo) {
+      var currentObj = this;
+
+      if (tipo == 0) {
+        var b = document.createElement("button");
+        b.style.color = "white";
+        b.id = id_btn + "_button";
+        b.style.backgroundColor = "green";
+        b.innerHTML = texto;
+
+        b.onclick = function () {//ACA CODIGO PARA PASAR A PROCESARLO
+        };
+
+        return b;
+      } else {
+        var b = document.createElement("button");
+        b.style.color = "white";
+        b.id = id_btn + "_export";
+        b.style.backgroundColor = "green";
+        b.innerHTML = texto;
+
+        b.onclick = function () {
+          var mind_data = currentObj.data.get_data('node_array');
+          var mind_name = mind_data.meta.name;
+          var mind_str = jsMind.util.json.json2string(mind_data);
+          jsMind.util.file.save(mind_str, 'text/jsmind', mind_name + '.json');
+        };
+
+        return b;
+      }
     }
   }
 });
@@ -6683,15 +6720,6 @@ var render = function() {
                       ),
                       _vm._v(" "),
                       _c(
-                        "v-btn",
-                        {
-                          attrs: { color: "success", dark: "", large: "" },
-                          on: { click: _vm.exportar }
-                        },
-                        [_vm._v("Exportar Data")]
-                      ),
-                      _vm._v(" "),
-                      _c(
                         "v-snackbar",
                         {
                           attrs: { "multi-line": _vm.multiLine },
@@ -6817,7 +6845,7 @@ var render = function() {
                       _c(
                         "div",
                         { staticClass: "subheading mb-4 text-center" },
-                        [_vm._v("Powered by Vuetify+Laravel+Vue")]
+                        [_vm._v("Powered by Vue+Vuetify+Laravel")]
                       ),
                       _vm._v(" "),
                       _c(
@@ -6920,7 +6948,7 @@ var render = function() {
                                               staticClass:
                                                 "headline text-center"
                                             },
-                                            [_vm._v("Definicion")]
+                                            [_vm._v("Definición")]
                                           )
                                         ]
                                       ),
@@ -7100,10 +7128,12 @@ var render = function() {
                         {
                           staticClass: "headline white--text mb-4 text-center"
                         },
-                        [_vm._v("Web development has never been easier")]
+                        [_vm._v("Crear un arquetipo nunca fué tan fácil.")]
                       ),
                       _vm._v(" "),
-                      _c("em", [_vm._v("Kick-start your application today")]),
+                      _c("em", [
+                        _vm._v("Crea uno haciendo click en el siguiente link")
+                      ]),
                       _vm._v(" "),
                       _c(
                         "v-btn",
@@ -7113,10 +7143,10 @@ var render = function() {
                             color: "blue lighten-2",
                             dark: "",
                             large: "",
-                            href: "/pre-made-themes"
+                            href: "/crearArquetipo"
                           }
                         },
-                        [_vm._v(" Get Started")]
+                        [_vm._v("Crear")]
                       )
                     ],
                     1
@@ -7163,7 +7193,11 @@ var render = function() {
                                 ]
                               ),
                               _vm._v(" "),
-                              _c("v-card-text")
+                              _c("v-card-text", [
+                                _vm._v(
+                                  "\n                Proyecto hecho en Universidad catolica de temuco como propuesta a reemplazar los arquetipos\n                medicos existentes en el repositorio OpenEHR CKM.\n              "
+                                )
+                              ])
                             ],
                             1
                           )
@@ -7192,7 +7226,21 @@ var render = function() {
                                 ]
                               ),
                               _vm._v(" "),
-                              _c("v-card-text"),
+                              _c("v-card-text", [
+                                _vm._v(
+                                  "\n                Repositorio Github: "
+                                ),
+                                _c(
+                                  "a",
+                                  {
+                                    attrs: {
+                                      href:
+                                        "https://github.com/magck/EditorArquetipos"
+                                    }
+                                  },
+                                  [_vm._v("Link")]
+                                )
+                              ]),
                               _vm._v(" "),
                               _c(
                                 "v-list",

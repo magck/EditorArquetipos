@@ -42,7 +42,7 @@
                 </label>
             </p>
             <v-btn type="submit" id='procesa' color="success" dark large form="form_file_load">Procesar</v-btn>
-            <v-btn color="success" dark large v-on:click="exportar">Exportar Data</v-btn>
+            <!--<v-btn color="success" dark large v-on:click="exportar">Exportar Data</v-btn>-->
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
@@ -71,6 +71,7 @@ export default {
             text: '',
             data: '',
             nombre_arch_expor: '',
+            arquetipos_actuales: [],
         }
     },
 /*      mounted(){
@@ -162,6 +163,10 @@ export default {
                 var jm = jsMind.show(options,mind);
                 jm.collapse_all();
                 currentObj.data = jm
+                var obj = {};
+                obj[id_container] = jm;
+                currentObj.arquetipos_actuales.push(obj);
+                console.log(currentObj.arquetipos_actuales);
 
             })
             .catch(function (error) {
@@ -176,7 +181,7 @@ export default {
             })            
 
         },
-        exportar(formulario){
+        exportar(formulario,id_nodo){
             formulario.preventDefault();
             let currentObj = this
             var mind_data = currentObj.data.get_data('node_array');
@@ -200,31 +205,60 @@ export default {
             downloadAnchorNode.remove();
             */
         },
-        crearDiv(self){
+        crearDiv(id){
             let currentObj = this;
-            var c = document.getElementById("main").childNodes.length; 
+            var c = document.getElementById("main").getElementsByTagName('div').length;
+            var x =  document.getElementById("main").getElementsByTagName('div');
             var div = document.createElement("div");
             div.style.width = "800px";
             div.style.height = "500px";
             div.style.border = "solid 1px #ccc";
             div.style.background = "#f4f4f4";
             var id = c+1;
-            div.id = "jsmind_container"+id;            
-            var boton = currentObj.crearBtn(id);
+            div.id = "jsmind_container"+id;
+            var id_btn = div.id;      
+            var boton = currentObj.crearBtn(id_btn,"Guardar",0);
+            var boton_exportar = currentObj.crearBtn(id_btn,"Exportar",1);
             var q = document.createElement("br");
             document.getElementById("main").appendChild(q);
             document.getElementById("main").appendChild(div);
-            document.getElementById("jsmind_container"+id).appendChild(boton);
+            document.getElementById(div.id).appendChild(boton);
+            document.getElementById(div.id).appendChild(document.createElement("br"));
+            document.getElementById(div.id).appendChild(document.createElement("br"));
 
+            document.getElementById(div.id).appendChild(boton_exportar);
+            document.getElementById("main").appendChild(document.createElement("br"));
+            document.getElementById("main").appendChild(document.createElement("br"));
+            document.getElementById("main").appendChild(document.createElement("br"));
             return div.id;
         },
-        crearBtn(id){
-            var b = document.createElement("button");
-            b.style.color = "white";
-            b.id = "jsmind_container"+id+"_button";
-            b.style.backgroundColor = "green";
-            b.innerHTML = "guardar";
-            return b;
+        crearBtn(id_btn,texto,tipo){
+            var currentObj = this 
+            if(tipo == 0){
+                var b = document.createElement("button");
+                b.style.color = "white";
+                b.id = id_btn+"_button";
+                b.style.backgroundColor = "green";
+                b.innerHTML = texto;
+                b.onclick = function () {
+                    //ACA CODIGO PARA PASAR A PROCESARLO
+                };
+                return b;
+            }else{
+                var b = document.createElement("button");
+                b.style.color = "white";
+                b.id = id_btn+"_export";
+                b.style.backgroundColor = "green";
+                b.innerHTML = texto;
+                b.onclick = function () {
+                    var mind_data = currentObj.data.get_data('node_array');
+                    var mind_name = mind_data.meta.name;
+                    var mind_str = jsMind.util.json.json2string(mind_data);
+                    jsMind.util.file.save(mind_str,'text/jsmind',mind_name+'.json'); 
+                };
+                return b;
+            }
+
         },
     }
 }
