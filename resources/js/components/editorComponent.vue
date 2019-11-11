@@ -210,8 +210,9 @@ export default {
             var c = document.getElementById("main").getElementsByTagName('div').length;
             var x =  document.getElementById("main").getElementsByTagName('div');
             var div = document.createElement("div");
-            div.style.width = "800px";
-            div.style.height = "500px";
+            div.style.width = "750px";
+            div.style.height = "450px";
+            div.style.float = "left";
             div.style.border = "solid 1px #ccc";
             div.style.background = "#f4f4f4";
             var id = c+1;
