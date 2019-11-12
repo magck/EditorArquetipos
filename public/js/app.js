@@ -2054,9 +2054,9 @@ __webpack_require__.r(__webpack_exports__);
           editable:true,
           theme:'primary'
       }
+      console.log(mind);
       var jm = jsMind.show(options,mind);
-      },
-  */
+      }, */
   methods: {
     subirformulario: function subirformulario(file) {
       file.preventDefault();
@@ -2139,38 +2139,66 @@ __webpack_require__.r(__webpack_exports__);
         var obj = {};
         obj[id_container] = jm;
         currentObj.arquetipos_actuales.push(obj);
-        console.log(currentObj.arquetipos_actuales);
       })["catch"](function (error) {
-        var mensaje_error = error.response.data.msg;
-        currentObj.snackbar = true;
-        currentObj.text = mensaje_error;
+        //let mensaje_error = error.response.data.msg;
+        //currentObj.snackbar = true;
+        //currentObj.text = mensaje_error;
+        if (error.response.status == 422) {
+          var mensaje_error = error.response.data.message;
+          currentObj.snackbar = true;
+          currentObj.text = mensaje_error;
+        } else {
+          var mensaje_error = error.response.data.msg;
+          currentObj.snackbar = true;
+          currentObj.text = mensaje_error;
+        }
+
         console.log(error.message);
         console.log(error.response.data);
         console.log(error.response.status);
         console.log(error.response.headers);
       });
     },
-    exportar: function exportar(formulario, id_nodo) {
-      formulario.preventDefault();
+    abrirMindmap: function abrirMindmap(formulario) {
       var currentObj = this;
+      var archv_formulario = document.getElementById('xmlfile_load');
+      var files = archv_formulario.files;
+
+      if (files.length > 0) {
+        var file_data = files[0];
+        jsMind.util.file.read(file_data, function (jsmind_data, jsmind_name) {
+          var mind = jsMind.util.json.string2json(jsmind_data);
+
+          if (!!mind) {
+            currentObj.data.show(mind);
+          } else {
+            prompt_info('No se puede abrir el archivo como Mindmap');
+          }
+        });
+      } else {
+        prompt_info('Selecciona un archivo primero.');
+      }
+      /*formulario.preventDefault();
+      let currentObj = this
       var mind_data = currentObj.data.get_data('node_array');
       var mind_name = mind_data.meta.name;
       var mind_str = jsMind.util.json.json2string(mind_data);
-      jsMind.util.file.save(mind_str, 'text/jsmind', mind_name + '.json');
-      /* 
-       var datos_exportar = currentObj.data.get_data() //get data obtiene el mind del modelo jsmind 
-       var mind_string = jsMind.util.json.json2string(datos_exportar);
-       var nombre_arquetipo = currentObj.nombre_arch_expor
-       var exportObj = mind_string
-       var exportName= nombre_arquetipo+"data"
-       var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-       var downloadAnchorNode = document.createElement('a');
-       downloadAnchorNode.setAttribute("href",     dataStr);
-       downloadAnchorNode.setAttribute("download", exportName + ".json");
-       document.body.appendChild(downloadAnchorNode); // required for firefox
-       downloadAnchorNode.click();
-       downloadAnchorNode.remove();
-       */
+      jsMind.util.file.save(mind_str,'text/jsmind',mind_name+'.json');
+      --
+      var datos_exportar = currentObj.data.get_data() //get data obtiene el mind del modelo jsmind 
+      var mind_string = jsMind.util.json.json2string(datos_exportar);
+      var nombre_arquetipo = currentObj.nombre_arch_expor
+      var exportObj = mind_string
+      var exportName= nombre_arquetipo+"data"
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+      var downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href",     dataStr);
+      downloadAnchorNode.setAttribute("download", exportName + ".json");
+      document.body.appendChild(downloadAnchorNode); // required for firefox
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      */
+
     },
     crearDiv: function crearDiv(id) {
       var currentObj = this;
@@ -2179,7 +2207,6 @@ __webpack_require__.r(__webpack_exports__);
       var div = document.createElement("div");
       div.style.width = "750px";
       div.style.height = "450px";
-      div.style["float"] = "left";
       div.style.border = "solid 1px #ccc";
       div.style.background = "#f4f4f4";
       var id = c + 1;
@@ -7078,6 +7105,15 @@ var render = function() {
                           }
                         },
                         [_vm._v("Procesar")]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "v-btn",
+                        {
+                          attrs: { color: "success", dark: "", large: "" },
+                          on: { click: _vm.abrirMindmap }
+                        },
+                        [_vm._v("Abrir jsMind Mindmap")]
                       ),
                       _vm._v(" "),
                       _c(

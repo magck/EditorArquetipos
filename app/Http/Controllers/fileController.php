@@ -33,7 +33,6 @@ class fileController extends Controller
             ,"openEHR-EHR-CLUSTER","openEHR-EHR-SECTION");
         $tipo_arquetipo_xml = (string)$this->parser($xml)->xpath('//a:archetype_id')[0]->value;
         $tipo_actual_arquetipo = explode(".",$tipo_arquetipo_xml)[0];
-
         foreach ($tipos_conocidos as $value) {
             if($value === $tipo_actual_arquetipo){
                 $tmp_tipo_arquetipo = explode("-",$value)[2];
@@ -346,33 +345,41 @@ class fileController extends Controller
                     $def_attributes = count($busca_it[0]->attributes);
                 } catch (\Exception $e) {
                     echo "Arquetipo no cuenta con una etiqueta".$e->getMessage();
+                    $def_attributes = FALSE;
                 }
                 
-                if($def_attributes>=1){ //si tengo items
+                if($def_attributes>=1 and $def_attributes!=FALSE){ //si tengo items
                     $def_1 = $busca_it[0]->attributes[0]; //items para procesar en xml
                     $short_def_1 = $busca_it[0]->attributes[0]->children;
                     $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name; //items
                 }else{
-                    return response()->json([
+                    $def_1 = array();
+                    $short_def_1 = array();
+                    $def_1_name = (string) NULL;
+                    /*return response()->json([
                         'status' => 'error',
                         'msg' => 'Archivo Imposible de procesar',
-                    ],400);
+                    ],400);*/
                 }
                 if($def_1 != NULL and $def_1_name != NULL){
                     $array_items = $this->recorrer_xml_CLUSTER($def_1,count($short_def_1));
                 }
+                
                 list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
                 //arreglo aTrama que tiene los hijos del nodo root
                 $primer_elemento_aTrama1 = reset($aTrama1);
                 $aTrama1 = array();
                 array_push($aTrama1,$primer_elemento_aTrama1);
                 array_push($aTrama1,$def_1_name);
+                $aTrama_datatypes = $aTrama;
         
                 //funcion match para renombrar los arreglos anteriores
                 $array_items = $this->array_values_recursive($this->match($array_items,$aTrama));
         
                 try {
-                    $json_final = $this->crear_mind_jsmind_CLUSTER($aTrama1,$array_items,"right",$aTrama1[0]);
+                    $description_xml = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
+                    $attributo_xml = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
+                    $json_final = $this->crear_mind_jsmind_CLUSTER($aTrama1,$array_items,"left",$aTrama1[0],$description_xml,$attributo_xml);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -381,12 +388,11 @@ class fileController extends Controller
                         'padre' => $json_final,
                         'status' => 'good',
                         'msg' => 'Archivo procesado con exito',
-                        //'nombre_archetype'=>$aTrama1_padres[0],
                     ],201);
                 }else{
                     return response()->json([
                         'status' => 'error',
-                        'msg' => 'Archivo no encontrado',
+                        'msg' => 'Archivo corrupto',
                     ],400);
                 }
         
@@ -396,7 +402,7 @@ class fileController extends Controller
     }else{
             return response()->json([
                 'status' => 'error',
-                'msg' => 'Archivo no encontrado',
+                'msg' => 'Archivo no recibido correctamente.',
             ],404);
         }
 
@@ -1035,7 +1041,6 @@ class fileController extends Controller
 
         foreach ($padres_split as $keya => $valuea) {
             $elemento = '"'.$valuea[0].'"'; //puede tomar pathway,description, protocol
-            //echo $valuea[0];
             if($valuea[0] == 'description'){
                 $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'"';
                 for ($i=0; $i < count($json_sender_description); $i++) { 
@@ -1085,7 +1090,6 @@ class fileController extends Controller
                 }
             }
         }
-        //$string_nodo_root .= $string_elem_padre."]}";
         if($string_elem_padre == (string) NULL){
             $string_nodo_root .= $string_elem_padre;
             $string_nodo_root .= $attribution_arquetipo;
@@ -1361,17 +1365,16 @@ class fileController extends Controller
 // FUNCIONES PARA ARQUETIPO DE TIPO CLUSTER
 //
 //
-    function crear_mind_jsmind_CLUSTER($aData,$aData1,$dir,$nombre_a){ //AGREGAR----------------------------------------------------
+    function crear_mind_jsmind_CLUSTER($aData,$aData1,$dir,$nombre_a,$descipcion,$attributo){ //AGREGAR----------------------------------------------------
         $meta = $this->crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
-        $hijos = $this->crear_data_hijos_jsmind_CLUSTER($aData,$aData1,$dir);
+        $hijos = $this->crear_data_hijos_jsmind_CLUSTER($aData,$aData1,$dir,$descipcion,$attributo);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
-    function crear_data_hijos_jsmind_CLUSTER($padres,$array_items,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
+    function crear_data_hijos_jsmind_CLUSTER($padres,$array_items,$dir,$descipcion,$attributo){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
-        //$json_sender_data = array();
         $dir_2 = NULL;
         if($dir == "right"){
             $dir_2 = "left";
@@ -1381,10 +1384,9 @@ class fileController extends Controller
         $nodo_root = $padres[0];
         $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
-        //PATHWAY
+        //ITEMS
         $id_pathway = 1000;
         $json_sender_items = $this->crear_array_hijos_jsmind_CLUSTER($array_items,$id_pathway+1);
-        //PROTOCOL
 
         $padres_split = array_chunk($padres, 1);
         unset($padres_split[0]); //sacamos el nodo root 
@@ -1392,7 +1394,7 @@ class fileController extends Controller
         foreach ($padres_split as $keya => $valuea) {
             $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state
             if($valuea[0] == 'items'){
-                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir.'"';
                 for ($i=0; $i < count($json_sender_items); $i++) { 
                     if($i != 0){
                         $string_f.=",".$json_sender_items[$i];
@@ -1400,11 +1402,30 @@ class fileController extends Controller
                         $string_f = '"children"'.":"."[".$json_sender_items[$i];
                     }
                 }
-                $string_elem_padre .= $string_f."]}"; 
+                if($string_f == (string) NULL){
+                    $string_elem_padre .= $string_f."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f."]}";
+                }
             }
 
         }
-        $string_nodo_root .= $string_elem_padre."]}";
+        if($string_elem_padre == (string) NULL){
+            $string_nodo_root .= $attributo;
+            $string_nodo_root .= ",".$descipcion."]}";
+        }else{
+            $string_nodo_root .= $string_elem_padre;
+            if($attributo != (string) NULL and $descipcion == (string) NULL){
+                $string_nodo_root .= ",".$attributo."]}";
+            }elseif($descipcion != (string) NULL and $attributo == (string)NULL){
+                $string_nodo_root .= ",".$descipcion."]}"; ;
+            }elseif($attributo == (string) NULL and $descipcion == (string) NULL){
+                $string_nodo_root .= "]}";
+            }else{
+                $string_nodo_root .= ",".$attributo;
+                $string_nodo_root .= ",".$descipcion."]}";
+            }
+        }
         return $string_nodo_root;
     }
     function crear_array_hijos_jsmind_CLUSTER($hijos,$id){

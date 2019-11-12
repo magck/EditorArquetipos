@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/absence_evaluation.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/address_cluster.xml") or die("Error al cargar el xml");
     function crear_meta_jsmind($nombre,$autor,$version){
         $string_head = '"meta":{
             "name":"'.$nombre.'",
@@ -80,13 +80,11 @@
             $hijos_cluster = $aT->children;
             $nro_hijos = count($hijos_cluster); //si los cuenta bien
             $nombre_hijos = (string)$aT->children->rm_attribute_name;
-            print_format($nombre_hijos);
         } catch (Exception $e) { //sino los puede contar
             $nro_hijos = FALSE; //no tiene hijos
             //echo 'Excepción capturada: ',  $e->getMessage(), "\n";
         }
         if($nro_hijos != FALSE){
-            echo "paso arriba";
             $array_hijos = array();
             $array_hijos[(string)$padre->node_id] = (string)$padre->rm_type_name;//---------
             //array_push($array_hijos,$aT->rm_type_name);
@@ -110,13 +108,10 @@
             for ($n=0; $n < count($new_arg); $n++) { 
                 if((string)$new_arg[$n]->rm_attribute_name == 'items'){
                     //print "paso items".$n;
-                    print_format($new_arg[$n]->rm_attribute_name);
                     $hijos = obtener_hijos_cluster($new_arg[$n],$arg);
-                    print_format($hijos);
                 }
             }
             
-            //print_format(count($hijos));
         } catch (Exception $e) {
             $hijos = NULL;
         }
@@ -180,7 +175,10 @@
             $array_items = recorrer_xml_OBSERVATION($def_1,count($short_def_1));
         }
         list($aTrama,$aTrama1) = buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
-        //arreglo aTrama que tiene los hijos del nodo root
+        //arreglo aTrama que tiene los hijos del nodo root, los valores que tiene todo el arquetipo
+        //print_format($aTrama);
+        //print_format($array_items);
+        //print_format($aTrama1);
         $primer_elemento_aTrama1 = reset($aTrama1);
         $aTrama1 = array();
         array_push($aTrama1,$primer_elemento_aTrama1);
@@ -474,7 +472,7 @@
         }
     }
 
-    function match($tmp_id,$aTrama){ //AGREGUE ESTA FUNCION
+    function match($tmp_id,$aTrama){ //AGREGUE ESTA FUNCION $array_items,$aTrama
         foreach ($tmp_id as $key => $value) {
             $nodo_id = array_key_exists($key,$aTrama);
             if($nodo_id != FALSE){
@@ -484,15 +482,16 @@
                         $nodo_id_2 = array_key_exists($llave,$aTrama);
                         if($nodo_id_2 != FALSE){
                             $valor_actual_data_2 = $aTrama[$llave];
-                            $tmp_id[$key][$llave] = $valor_actual_data_2;
+                            $tmp_id[$key][$llave] = $valor_actual_data_2.",".$tmp_id[$key][$llave];
                         }
                     }
                 }else{
-                    $tmp_id[$key] =  $aTrama[$key];
+                    $tmp_id[$key] =  $aTrama[$key].",".$tmp_id[$key];
                 }
 
             }
         }
+        print_format($tmp_id);
         return $tmp_id;
     }
 
@@ -531,6 +530,8 @@
                     for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
                         $ind_hijos = $ind_padre + $u;
                         if ($u != 0) {
+                            $valor_d = explode(",",$array_con_hijos[$u]);
+                            print_format($array_con_hijos);
                             array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
                         }
                     }
@@ -542,25 +543,6 @@
 
         }
         return $json_sender_data;
-        /*foreach ($hijos as $keyq => $valueq) {
-            $ind = $keyq+$id;
-            $llave = (string) $ind;
-            if(is_array($valueq)== FALSE){ //Si el nodo que estoy procesando no tiene mas hijos
-                $valor = (string) $valueq;
-                array_push($json_sender_data,json_encode(array('id'=>'"'.$llave.'"',"topic"=>$valor)));
-            }else{
-                $array_con_hijos = $valueq;
-                $tmp_array_con_hijos = array();
-                $padre_array_con_hijos = $array_con_hijos[0];//mas arriba explicado, siempre el padre estara en 0
-                foreach ($array_con_hijos as $keyb =>$valueb) { //recorremos el arreglo para guardar sus hijos
-                    $ind_2 = $keyb+$id+100;
-                    $llave_kb = (string) $ind_2;
-                    array_push($tmp_array_con_hijos,array('id'=>$llave_kb,"topic"=>$valueb));
-                }
-                array_push($json_sender_data,json_encode(array('id'=>$llave,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
-            }
-
-        }*/
         
     }
 
