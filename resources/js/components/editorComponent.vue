@@ -83,8 +83,8 @@ export default {
     }
     console.log(mind);
     var jm = jsMind.show(options,mind);
-    }, */
-
+    }, 
+*/
     methods:{
         subirformulario(file){
             file.preventDefault();

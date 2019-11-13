@@ -2056,7 +2056,8 @@ __webpack_require__.r(__webpack_exports__);
       }
       console.log(mind);
       var jm = jsMind.show(options,mind);
-      }, */
+      }, 
+  */
   methods: {
     subirformulario: function subirformulario(file) {
       file.preventDefault();

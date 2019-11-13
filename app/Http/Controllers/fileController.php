@@ -92,7 +92,7 @@ class fileController extends Controller
                     $array_protocol = NULL;
                 }
 
-                list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
+                list($aTrama,$aTrama1) = $this->buscar_item_2($xml,'en',$concept); //obtengo los valores de id->elemento
                 //arreglo aTrama que tiene los hijos del nodo root
                 if($aTrama1 != NULL){
                     $primer_elemento_aTrama1 = reset($aTrama1);
@@ -135,7 +135,8 @@ class fileController extends Controller
                     $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
                     $attribution_arquetipo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
                     //$aTrama1[0] tiene el nombre del arquetipo que se esta tratando
-                    $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo,$aTrama1[0],$attribution_arquetipo);
+                    $nombre_Arq = explode("&&&",$aTrama1[0])[0];
+                    $json_final = $this->crear_mind_jsmind_ACTION($aTrama1,$array_pathway,$array_protocol,$array_description,"right",$description_arquetipo,$nombre_Arq,$attribution_arquetipo);
                 }catch (Exception $e) {
                     $json_final = NULL;
                     return response()->json([
@@ -149,32 +150,6 @@ class fileController extends Controller
                         'status' => 'good',
                         'msg' => 'Archivo procesado con exito.',
                     ],201);   
-                    /*if($array_info[0] == array() and $array_info[1] != array() and $array_info[2] != array()){
-                        return response()->json([
-                            'padre' => $json_final,
-                            'status' => 'good',
-                            'msg' => 'Archivo procesado con exito(No contiene Pathway)',
-                        ],201);
-                    }elseif($array_info[1] == array() and $array_info[0] != array() and $array_info[2] != array() ){
-                        return response()->json([
-                            'padre' => $json_final,
-                            'status' => 'good',
-                            'msg' => 'Archivo procesado con exito(No contiene Description)',
-                        ],201);
-                    }elseif($array_info[2] == array() and $array_info[1] != array() and $array_info[0] != array()){
-                        return response()->json([
-                            'padre' => $json_final,
-                            'status' => 'good',
-                            'msg' => 'Archivo procesado con exito(No contiene Protocol)',
-                        ],201);
-                    }else{
-                        return response()->json([
-                            'padre' => $json_final,
-                            'status' => 'good',
-                            'msg' => 'Archivo procesado con exito.',
-                        ],201);   
-                    }*/
-
                 }else{
                     return response()->json([
                         'status' => 'error',
@@ -237,7 +212,7 @@ class fileController extends Controller
                     ],400);
                 }
                 //CONEXION ID->ATTRIBUTE
-                list($aTrama,$aTrama1) =$this->buscar_item($busca_term_definition,'en',$concept);
+                list($aTrama,$aTrama1) =$this->buscar_item_2($xml,'en',$concept);
 
                 $tmp_id = $this->match($tmp_id,$aTrama);
                 $hijos_protocol = $this->match($tmp_pro,$aTrama);
@@ -255,7 +230,9 @@ class fileController extends Controller
                 try {
                     $description_arquetipo = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
                     $attribution_arquetipo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
-                    $json_final = $this->crear_mind_jsmind_EVALUATION($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right",$description_arquetipo,$attribution_arquetipo,$aTrama1_padres[0]);
+                    //aTrama1_padres[0] tiene el nombre del arquetipo actual
+                    $nombre_arq = explode("&&&",$aTrama1_padres[0])[0];
+                    $json_final = $this->crear_mind_jsmind_EVALUATION($aTrama1_padres,$aTrama2_hijos,$aTrama3_hijos_c,"right",$description_arquetipo,$attribution_arquetipo,$nombre_arq);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -282,23 +259,60 @@ class fileController extends Controller
                 } catch (\Exception $e) {
                     echo "arquetipo no cuenta con una etiqueta".$e->getMessage();
                 }
-                
-                if($def_attributes>=2){ //si tengo data y protocol
-                    $def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]; //DATA
+
+                //DATA
+                try {
+                    $def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]; 
                     $short_def_1 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes->children;
                     $def_1_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->rm_attribute_name;
-                    $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];//STATE
+                } catch (\Exception $t) {
+                    $def_1 = NULL;
+                    $short_def_1 = NULL;
+                    $def_1_name = NULL;
+                }
+
+                //STATE
+                try {
+                    $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];
                     $short_def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes->children;
                     $def_2_name =(string) $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->rm_attribute_name;
-                    $def_3 = $busca_it[0]->attributes[1]->children->attributes->children; //PROTOCOL
-                    $def_3_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+                } catch (\Exception $e) {
+                    $def_2 = NULL;
+                    $short_def_2 = NULL;
+                    $def_2_name = NULL;
                 }
-                
-                $array_data = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes,count($short_def_1));
-                $array_state = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes,count($short_def_2));
-                $array_protocol = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[1]->children->attributes,count($def_3));
+
+                //PROTOCOL
+                try {
+                    $def_3 = $busca_it[0]->attributes[1]->children->attributes->children;
+                    $def_3_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+                } catch (\Exception $q) {
+                    $def_3 = NULL;
+                    $def_3_name = NULL;
+                }
+
+                //Si tengo Data
+                if($def_1 != NULL and $short_def_1 != NULL and $def_1_name != NULL){
+                    $array_data = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[0]->children->attributes,count($short_def_1));
+                }else{
+                    $array_data = array();
+                }
+
+                //Si tengo State
+                if($def_2 != NULL and $short_def_2 != NULL and $def_2_name != NULL){
+                    $array_state = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes,count($short_def_2));
+                }else{
+                    $array_state = array();
+                }
+
+                //Si tengo protocol
+                if($def_3 != NULL and $def_3_name != NULL){
+                    $array_protocol = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[1]->children->attributes,count($def_3));
+                }else{
+                    $array_protocol = array();
+                }
         
-                list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
+                list($aTrama,$aTrama1) = $this->buscar_item_2($xml,'en',$concept); //obtengo los valores de id->elemento
                 //arreglo aTrama que tiene los hijos del nodo root
                 $primer_elemento_aTrama1 = reset($aTrama1);
                 $aTrama1 = array();
@@ -312,7 +326,9 @@ class fileController extends Controller
                 $array_state = $this->array_values_recursive($this->match($array_state,$aTrama));
 
                try {
-                    $json_final = $this->crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_state,"right",$aTrama1[0]);
+                    $descripcion = $this->crear_description_jsmind_DESCRIPTION($xml,$concept);
+                    $attributo = $this->crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
+                    $json_final = $this->crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_state,"right",$aTrama1[0],$descripcion,$attributo);
                 } catch (Exception $e) {
                     $json_final = NULL;
                 }
@@ -365,7 +381,7 @@ class fileController extends Controller
                     $array_items = $this->recorrer_xml_CLUSTER($def_1,count($short_def_1));
                 }
                 
-                list($aTrama,$aTrama1) = $this->buscar_item($busca_term_definition,'en',$concept); //obtengo los valores de id->elemento
+                list($aTrama,$aTrama1) = $this->buscar_item_2($xml,'en',$concept); //obtengo los valores de id->elemento
                 //arreglo aTrama que tiene los hijos del nodo root
                 $primer_elemento_aTrama1 = reset($aTrama1);
                 $aTrama1 = array();
@@ -952,6 +968,39 @@ class fileController extends Controller
         return $tmp_id;
     }
 
+    function buscar_item_2($xml,$lenguage_default,$concept_xml){
+        $arreglo_code_items = array();
+        $arreglo_nodo_root = array();
+        $term_definition = $this->parser($xml)->xpath('//a:term_definitions');
+        for ($w=0; $w < count($term_definition); $w++) { 
+            if((string)$term_definition[$w]->attributes() == $lenguage_default){
+                $items_recorrer = $term_definition[$w]->items;
+                for ($q=0; $q < count($items_recorrer); $q++) {
+                    //print_format($items_recorrer[$q]);
+                    $items_de_id = $this->array_to_string($items_recorrer[$q]);
+                    if ((string)$items_recorrer[$q]->attributes() != $concept_xml) {
+                        $arreglo_code_items[(string)$items_recorrer[$q]->attributes()] = $items_de_id;
+                    }else{
+                        $arreglo_nodo_root[(string)$items_recorrer[$q]->attributes()] = $items_de_id;
+                    }
+                } 
+            }
+        }
+        return array($arreglo_code_items,$arreglo_nodo_root);
+    }
+    function array_to_string($xml){
+        $xml = $xml->items;
+        $string_a_retornar = (string) NULL;
+        for ($i=0; $i < count($xml); $i++) {
+            if ($i >0) {
+                $string_a_retornar .= "&&&".$xml[$i];
+            }else{
+                $string_a_retornar .= $xml[$i];
+            }
+        }
+        return $string_a_retornar;
+    }
+
 //
 //
 //
@@ -970,22 +1019,30 @@ class fileController extends Controller
         $json_sender_data = array();
         $ind_padre = $id;
         if(is_array($hijos) == TRUE and count($hijos)>1){
+            $json_sender_data = array();
+            $ind_padre = $id;
             for ($w=0; $w < count($hijos); $w++) {
-                if($w > 0){
+                if($w != 0){
                     $ind_padre = $ind_padre+50;
                     if(is_array($hijos[$w]) == TRUE){
                         $array_con_hijos = $hijos[$w];
                         $tmp_array_con_hijos = array();
                         $padre_array_con_hijos = $array_con_hijos[0];
                         for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
-                            if ($q > 0) {
-                                $ind_hijos = $ind_padre + $q;
+                            $ind_hijos = $ind_padre + $q;
+                            if ($q != 0) {
                                 array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
                             }
                         }
                         array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                     }else{
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                        $explode_string = explode("&&&",$hijos[$w]);
+                        if(count($explode_string) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                        }elseif(count($explode_string) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 }else{
                     if(is_array($hijos[$w]) == TRUE){
@@ -993,18 +1050,27 @@ class fileController extends Controller
                         $tmp_array_con_hijos = array();
                         $padre_array_con_hijos = $array_con_hijos[0];
                         for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
-                            if ($u > 0) {
-                                $ind_hijos_2 = $ind_padre + $u;
-                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos_2,"topic"=>$array_con_hijos[$u]));
+                            $ind_hijos = $ind_padre + $u;
+                            if ($u != 0) {
+                                $valor_d = explode(",",$array_con_hijos[$u]);
+                                //print_format($array_con_hijos);
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
                             }
                         }
                         array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                     }else{
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                        $explode_string = explode("&&&",$hijos[$w]);
+                        if(count($explode_string) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                        }elseif(count($explode_string) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 } 
     
             }
+            //print_format($json_sender_data);
             return $json_sender_data; 
         }else{
             return $json_sender_data; 
@@ -1021,7 +1087,13 @@ class fileController extends Controller
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
         $nodo_root = $padres[0];
-        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $padre_explode = explode("&&&",$nodo_root);
+        if(count($padre_explode) == 2){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","children":[';
+        }elseif(count($padre_explode) == 3){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":"'.$padre_explode[2].'","children":[';
+        }
+        //$string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
         $string_f_pathway = (string) NULL;
         $string_f_protocol = (string) NULL;
@@ -1147,21 +1219,27 @@ class fileController extends Controller
         $ind_padre = $id;
         if(is_array($hijos) == TRUE and count($hijos)>1){
             for ($w=0; $w < count($hijos); $w++) {
-                if($w > 0){
+                if($w != 0){
                     $ind_padre = $ind_padre+50;
                     if(is_array($hijos[$w]) == TRUE){
                         $array_con_hijos = $hijos[$w];
                         $tmp_array_con_hijos = array();
                         $padre_array_con_hijos = $array_con_hijos[0];
                         for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
-                            if ($q > 0) {
-                                $ind_hijos = $ind_padre + $q;
+                            $ind_hijos = $ind_padre + $q;
+                            if ($q != 0) {
                                 array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
                             }
                         }
                         array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                     }else{
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                        $explode_string = explode("&&&",$hijos[$w]);
+                        if(count($explode_string) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                        }elseif(count($explode_string) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 }else{
                     if(is_array($hijos[$w]) == TRUE){
@@ -1169,14 +1247,22 @@ class fileController extends Controller
                         $tmp_array_con_hijos = array();
                         $padre_array_con_hijos = $array_con_hijos[0];
                         for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
-                            if ($u > 0) {
-                                $ind_hijos_2 = $ind_padre + $u;
-                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos_2,"topic"=>$array_con_hijos[$u]));
+                            $ind_hijos = $ind_padre + $u;
+                            if ($u != 0) {
+                                $valor_d = explode(",",$array_con_hijos[$u]);
+                                //print_format($array_con_hijos);
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
                             }
                         }
                         array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                     }else{
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                        $explode_string = explode("&&&",$hijos[$w]);
+                        if(count($explode_string) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                        }elseif(count($explode_string) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 } 
     
@@ -1192,7 +1278,13 @@ class fileController extends Controller
         //NODO ROOT
         //$json_sender_data = array();
         $nodo_root = $padres[0];
-        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $padre_explode = explode("&&&",$nodo_root);
+        if(count($padre_explode) == 2){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","children":[';
+        }elseif(count($padre_explode) == 3){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":'.$padre_explode[2].',"children":[';
+        }
+        //$string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
         $string_f_p = (string) NULL;
         //DATA
@@ -1283,15 +1375,15 @@ class fileController extends Controller
         }
     }
 
-    function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir,$nombre_a){
+    function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir,$nombre_a,$descripcion,$attributo){
         $meta = $this->crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
-        $hijos = $this->crear_data_hijos_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir);
+        $hijos = $this->crear_data_hijos_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir,$descripcion,$attributo);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
 
-    function crear_data_hijos_jsmind_OBSERVATION($padres,$array_data,$array_description,$array_protocol,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
+    function crear_data_hijos_jsmind_OBSERVATION($padres,$array_data,$array_description,$array_protocol,$dir,$descripcion,$attributo){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
         //$json_sender_data = array();
@@ -1302,27 +1394,33 @@ class fileController extends Controller
             $dir_2 = "right";
         }
         $nodo_root = $padres[0];
-        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $padre_explode = explode("&&&",$nodo_root);
+        if(count($padre_explode) == 2){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","children":[';
+        }elseif(count($padre_explode) == 3){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":"'.$padre_explode[2].'","children":[';
+        }
+        //$string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
         $string_f_pathway = (string) NULL;
         $string_f_protocol = (string) NULL;
         //PATHWAY
-        $id_pathway = 100;
+        $id_pathway = 1000;
         $json_sender_pathway = $this->crear_array_hijos_jsmind_ACTION($array_data,$id_pathway+1);
         //PROTOCOL
-        $id_protocol = 200;
+        $id_protocol = 20000;
         $json_sender_protocol = $this->crear_array_hijos_jsmind_ACTION($array_protocol,$id_protocol+1);
         //DESCRIPTION
-        $id_description = 300;
+        $id_description = 50000;
         $json_sender_description = $this->crear_array_hijos_jsmind_ACTION($array_description,$id_description+1);
         
         $padres_split = array_chunk($padres, 1);
         unset($padres_split[0]); //sacamos el nodo root 
         $string_elem_padre = (string) NULL; //string final
         foreach ($padres_split as $keya => $valuea) {
-            $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state
+            $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state,events
             if($valuea[0] == 'protocol'){
-                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'",';
+                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'"';
                 for ($i=0; $i < count($json_sender_description); $i++) { 
                     if($i != 0){
                         $string_f.=",".$json_sender_description[$i];
@@ -1330,10 +1428,14 @@ class fileController extends Controller
                         $string_f = '"children"'.":"."[".$json_sender_description[$i];
                     }
                 }
-                $string_elem_padre .= $string_f."]}"; 
+                if($string_f == (string) NULL){
+                    $string_elem_padre .= $string_f."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f."]}";
+                }
             }
             if($valuea[0] == 'data'){
-                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
+                $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
                 for ($y=0; $y < count($json_sender_pathway); $y++) { 
                     if($y != 0){
                         $string_f_pathway .= ",".$json_sender_pathway[$y];
@@ -1341,10 +1443,14 @@ class fileController extends Controller
                         $string_f_pathway = '"children"'.":"."[".$json_sender_pathway[$y];
                     }
                 }
-                $string_elem_padre .= $string_f_pathway."]}"; 
+                if($string_f_pathway == (string) NULL){
+                    $string_elem_padre .= $string_f_pathway."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_pathway."]}";
+                }
             }
             if($valuea[0] == 'state'){
-                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'",';
+                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
                 for ($t=0; $t < count($json_sender_protocol); $t++) { 
                     if($t != 0){
                         $string_f_protocol .= ",".$json_sender_protocol[$t];
@@ -1352,11 +1458,31 @@ class fileController extends Controller
                         $string_f_protocol = '"children"'.":"."[".$json_sender_protocol[$t];
                     }
                 }
-                $string_elem_padre .= $string_f_protocol."]}"; 
-                
+                if($string_f_protocol == (string) NULL){
+                    $string_elem_padre .= $string_f_protocol."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_protocol."]}";
+                }
             }
         }
-        $string_nodo_root .= $string_elem_padre."]}";
+        if($string_elem_padre == (string) NULL){
+            $string_nodo_root .= $attributo;
+            $string_nodo_root .= ",".$descripcion."]}";
+        }else{
+            $string_nodo_root .= $string_elem_padre;
+            if($attributo != (string) NULL and $descripcion == (string) NULL){
+                $string_nodo_root .= ",".$attributo."]}";
+            }elseif($descripcion != (string) NULL and $attributo == (string)NULL){
+                $string_nodo_root .= ",".$descripcion."]}"; ;
+            }elseif($attributo == (string) NULL and $descripcion == (string) NULL){
+                $string_nodo_root .= "]}";
+            }else{
+                $string_nodo_root .= ",".$attributo;
+                $string_nodo_root .= ",".$descripcion."]}";
+            }
+        }
+        return $string_nodo_root;
+        //$string_nodo_root .= $string_elem_padre."]}";
         return $string_nodo_root;
     }
 //
@@ -1372,9 +1498,68 @@ class fileController extends Controller
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
+    function crear_array_hijos_jsmind_CLUSTER($hijos,$id){
+        //print_format($hijos);
+        $json_sender_data = array();
+        $ind_padre = $id;
+        for ($w=0; $w < count($hijos); $w++) {
+            if($w != 0){
+                $ind_padre = $ind_padre+50;
+                if(is_array($hijos[$w]) == TRUE){
+                    $array_con_hijos = $hijos[$w];
+                    $tmp_array_con_hijos = array();
+                    $padre_array_con_hijos = $array_con_hijos[0];
+                    for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
+                        $ind_hijos = $ind_padre + $q;
+                        if ($q != 0) {
+                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+                        }
+                    }
+                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                }else{
+                    $explode_string = explode("&&&",$hijos[$w]);
+                    if(count($explode_string) == 2){
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                    }elseif(count($explode_string) == 3){
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                    }
+                    //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                }
+            }else{
+                if(is_array($hijos[$w]) == TRUE){
+                    $array_con_hijos = $hijos[$w];
+                    $tmp_array_con_hijos = array();
+                    $padre_array_con_hijos = $array_con_hijos[0];
+                    for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
+                        $ind_hijos = $ind_padre + $u;
+                        if ($u != 0) {
+                            $valor_d = explode(",",$array_con_hijos[$u]);
+                            //print_format($array_con_hijos);
+                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
+                        }
+                    }
+                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                }else{
+                    $explode_string = explode("&&&",$hijos[$w]);
+                    if(count($explode_string) == 2){
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                    }elseif(count($explode_string) == 3){
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                    }
+                    //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                }
+            } 
+
+        }
+        //print_format($json_sender_data);
+        return $json_sender_data;
+        
+    }
     function crear_data_hijos_jsmind_CLUSTER($padres,$array_items,$dir,$descipcion,$attributo){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
+        //$padres,$array_items,$dir,$descipcion,$attributo
         //NODO ROOT
+        //$json_sender_data = array();
         $dir_2 = NULL;
         if($dir == "right"){
             $dir_2 = "left";
@@ -1382,9 +1567,15 @@ class fileController extends Controller
             $dir_2 = "right";
         }
         $nodo_root = $padres[0];
-        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $padre_explode = explode("&&&",$nodo_root);
+        if(count($padre_explode) == 2){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","children":[';
+        }elseif(count($padre_explode) == 3){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":'.$padre_explode[2].',"children":[';
+        }
+        //$string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
-        //ITEMS
+        //PATHWAY
         $id_pathway = 1000;
         $json_sender_items = $this->crear_array_hijos_jsmind_CLUSTER($array_items,$id_pathway+1);
 
@@ -1410,6 +1601,7 @@ class fileController extends Controller
             }
 
         }
+
         if($string_elem_padre == (string) NULL){
             $string_nodo_root .= $attributo;
             $string_nodo_root .= ",".$descipcion."]}";
@@ -1427,46 +1619,6 @@ class fileController extends Controller
             }
         }
         return $string_nodo_root;
-    }
-    function crear_array_hijos_jsmind_CLUSTER($hijos,$id){
-        $json_sender_data = array();
-        $ind_padre = $id;
-        for ($w=0; $w < count($hijos); $w++) {
-            if($w != 0){
-                $ind_padre = $ind_padre+50;
-                if(is_array($hijos[$w]) == TRUE){
-                    $array_con_hijos = $hijos[$w];
-                    $tmp_array_con_hijos = array();
-                    $padre_array_con_hijos = $array_con_hijos[0];
-                    for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
-                        $ind_hijos = $ind_padre + $q;
-                        if ($q != 0) {
-                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
-                        }
-                    }
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
-                }else{
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
-                }
-            }else{
-                if(is_array($hijos[$w]) == TRUE){
-                    $array_con_hijos = $hijos[$w];
-                    $tmp_array_con_hijos = array();
-                    $padre_array_con_hijos = $array_con_hijos[0];
-                    for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
-                        $ind_hijos = $ind_padre + $u;
-                        if ($u != 0) {
-                            array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
-                        }
-                    }
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
-                }else{
-                    array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
-                }
-            } 
-
-        }
-        return $json_sender_data;     
     }
     function recorrer_xml_CLUSTER($xml,$number){
         try {
