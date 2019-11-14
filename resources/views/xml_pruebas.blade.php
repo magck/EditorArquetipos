@@ -1,5 +1,5 @@
 <?php
-    $xml = simplexml_load_file("../storage/app/xml_imports/blood_observation.xml") or die("Error al cargar el xml");
+    $xml = simplexml_load_file("../storage/app/xml_imports/4_ob.xml") or die("Error al cargar el xml");
     function crear_meta_jsmind($nombre,$autor,$version){
         $string_head = '"meta":{
             "name":"'.$nombre.'",
@@ -191,9 +191,16 @@
             $short_def_1 = NULL;
             $def_1_name = NULL;
         }
-        print_format($def_1_name);
-
-        //STATE
+        //EVENTS
+        try {
+            $def_eventos = $busca_it[0]->attributes[0]->children->attributes;//->children seran los eventos
+            $numero_eventos = $busca_it[0]->attributes[0]->children->attributes->children;
+            $nombre_eventos = "Events";
+        } catch (\Exception $w) {
+            $def_eventos = NULL;
+            $numero_eventos = NULL;
+        }
+        //STATE o DATA ._.XD
         try {
             $def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1];
             $short_def_2 = $busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes->children;
@@ -203,7 +210,6 @@
             $short_def_2 = NULL;
             $def_2_name = NULL;
         }
-        print_format($def_2_name);
         //PROTOCOL
         try {
             $def_3 = $busca_it[0]->attributes[1]->children->attributes->children;
@@ -212,7 +218,6 @@
             $def_3 = NULL;
             $def_3_name = NULL;
         }
-        print_format($def_3_name);
 
         //Si tengo Data
         if($def_1 != NULL and $short_def_1 != NULL and $def_1_name != NULL){
@@ -234,6 +239,12 @@
         }else{
             $array_protocol = array();
         }
+        
+        if($def_eventos != NULL and $numero_eventos != NULL){
+            $array_events = recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes,count($numero_eventos));
+        }else{
+            $arrat_events = array();
+        }
 
         list($aTrama,$aTrama1) = buscar_item_2($xml,'en',$concept); //obtengo los valores de id->elemento
         //arreglo aTrama que tiene los hijos del nodo root
@@ -241,17 +252,27 @@
         $aTrama1 = array();
         array_push($aTrama1,$primer_elemento_aTrama1);
         array_push($aTrama1,$def_1_name);
-        array_push($aTrama1,$def_2_name);
+        array_push($aTrama1,$nombre_eventos);
         array_push($aTrama1,$def_3_name);
+        array_push($aTrama1,$def_2_name);
+
+
         //funcion match para renombrar los arreglos anteriores
         $array_state = array_values_recursive(match($array_state,$aTrama));
         $descripcion = (string) NULL;//crear_description_jsmind_DESCRIPTION($xml,$concept);
         $attributo = (string) NULL;//crear_attribution_jsmind_ATTRIBUTION($xml,$concept);
         $array_data = array_values_recursive(match($array_data,$aTrama));
         $array_protocol = array_values_recursive(match($array_protocol,$aTrama));
-        $json_final = crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_state,"right",$aTrama1[0],$descripcion,$attributo);
+        $array_events = array_values_recursive(match($array_events,$aTrama));
+        //echo $primer_elemento_aTrama1;
+/*         print_format($array_data);
+        print_format($array_events);
+        print_format($array_protocol);
+        print_format($array_state);
+        print_format($aTrama1); */
+        $json_final = crear_mind_jsmind_OBSERVATION($aTrama1,$array_data,$array_protocol,$array_events,$array_state,$descripcion,$attributo,"nombre_a","right");
         
-        //echo $json_final;
+        echo($json_final);
 
 
    }
@@ -301,6 +322,12 @@
         echo crear_mind_jsmind_CLUSTER($aTrama1,$array_items,$descripcion_de_xml,"left",$attribution);
         //print_format($descripcion_de_xml);
 
+    
+    
+    
+    
+    
+    
     }if ($tmp_tipo_arquetipo == "SECTION") {
 
     }
@@ -352,7 +379,7 @@
                         $array_state[(string)$id_p] = $hijos_cluster_description;
                     }
                     
-                }else{
+                }elseif((string)$nombre_p != "DV_DURATION"){
                     $array_state[(string)$id_p] = (string)$nombre_p;
                 }
                         
@@ -363,15 +390,15 @@
         }
     }
 
-    function crear_mind_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir,$nombre_a,$descripcion,$attributo){
+    function crear_mind_jsmind_OBSERVATION($padres,$array_data,$array_protocol,$array_events,$array_state,$descripcion,$attributo,$nombre_a,$dir){
         $meta = crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = crear_format_jsmind("node_tree");
-        $hijos = crear_data_hijos_jsmind_OBSERVATION($aData,$aData1,$aData2,$aData3,$dir,$descripcion,$attributo);
+        $hijos = crear_data_hijos_jsmind_OBSERVATION($padres,$array_data,$array_protocol,$array_events,$array_state,$descripcion,$attributo,$dir);
         $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
         return $string_mind;
     }
 
-    function crear_data_hijos_jsmind_OBSERVATION($padres,$array_data,$array_description,$array_protocol,$dir,$descripcion,$attributo){ //funcion que crea los hijos de root (jsmind)-------------------
+    function crear_data_hijos_jsmind_OBSERVATION($padres,$array_data,$array_protocol,$array_events,$array_state,$descripcion,$attributo,$dir){ //funcion que crea los hijos de root (jsmind)-------------------
         //lo primero es crear el nodo root, padre de todos los demas nodos
         //NODO ROOT
         //$json_sender_data = array();
@@ -392,43 +419,37 @@
         $string_f = (string) NULL; 
         $string_f_pathway = (string) NULL;
         $string_f_protocol = (string) NULL;
-        //PATHWAY
+        $string_f_eventos = (string) NULL;
+        //DATA
         $id_pathway = 1000;
-        $json_sender_pathway = crear_array_hijos_jsmind_CLUSTER($array_data,$id_pathway+1);
+        $json_sender_data = crear_array_hijos_jsmind_CLUSTER($array_data,$id_pathway+1);
         //PROTOCOL
         $id_protocol = 20000;
         $json_sender_protocol = crear_array_hijos_jsmind_CLUSTER($array_protocol,$id_protocol+1);
-        //DESCRIPTION
-        $id_description = 50000;
-        $json_sender_description = crear_array_hijos_jsmind_CLUSTER($array_description,$id_description+1);
-        
+        //print_format($array_protocol);
+        //print_format($json_sender_protocol);
+        //Events 
+        $id_eventos = 70000;
+        $json_sender_eventos = crear_array_hijos_jsmind_CLUSTER($array_events,$id_eventos+1);
+        //STATE
+        $id_state = 50000;
+        $json_sender_state = crear_array_hijos_jsmind_CLUSTER($array_state,$id_state+1);
+        print_format($json_sender_data);
+        print_format($json_sender_protocol);
+        print_format($json_sender_eventos);
+        print_format($json_sender_state);
         $padres_split = array_chunk($padres, 1);
         unset($padres_split[0]); //sacamos el nodo root 
         $string_elem_padre = (string) NULL; //string final
         foreach ($padres_split as $keya => $valuea) {
             $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state,events
-            if($valuea[0] == 'protocol'){
-                $string_elem_padre .= ',{"id":"'.$id_description.'","topic":'.$elemento.',"direction":"'.$dir.'"';
-                for ($i=0; $i < count($json_sender_description); $i++) { 
-                    if($i != 0){
-                        $string_f.=",".$json_sender_description[$i];
-                    }else{
-                        $string_f = '"children"'.":"."[".$json_sender_description[$i];
-                    }
-                }
-                if($string_f == (string) NULL){
-                    $string_elem_padre .= $string_f."}";
-                }else{
-                    $string_elem_padre .= ",".$string_f."]}";
-                }
-            }
             if($valuea[0] == 'data'){
                 $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
-                for ($y=0; $y < count($json_sender_pathway); $y++) { 
+                for ($y=0; $y < count($json_sender_data); $y++) { 
                     if($y != 0){
-                        $string_f_pathway .= ",".$json_sender_pathway[$y];
+                        $string_f_pathway .= ",".$json_sender_data[$y];
                     }else{
-                        $string_f_pathway = '"children"'.":"."[".$json_sender_pathway[$y];
+                        $string_f_pathway = '"children"'.":"."[".$json_sender_data[$y];
                     }
                 }
                 if($string_f_pathway == (string) NULL){
@@ -437,19 +458,50 @@
                     $string_elem_padre .= ",".$string_f_pathway."]}";
                 }
             }
+            
             if($valuea[0] == 'state'){
                 $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
-                for ($t=0; $t < count($json_sender_protocol); $t++) { 
+                for ($t=0; $t < count($json_sender_state); $t++) { 
                     if($t != 0){
-                        $string_f_protocol .= ",".$json_sender_protocol[$t];
+                        $string_f_protocol .= ",".$json_sender_state[$t];
                     }else{
-                        $string_f_protocol = '"children"'.":"."[".$json_sender_protocol[$t];
+                        $string_f_protocol = '"children"'.":"."[".$json_sender_state[$t];
                     }
                 }
                 if($string_f_protocol == (string) NULL){
                     $string_elem_padre .= $string_f_protocol."}";
                 }else{
                     $string_elem_padre .= ",".$string_f_protocol."]}";
+                }
+            }
+            if($valuea[0] == 'protocol'){
+                $string_elem_padre .= ',{"id":"'.$id_state.'","topic":'.$elemento.',"direction":"'.$dir.'"';
+                for ($i=0; $i < count($json_sender_protocol); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender_protocol[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender_protocol[$i];
+                    }
+                }
+                if($string_f == (string) NULL){
+                    $string_elem_padre .= $string_f."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f."]}";
+                }
+            }
+            if($valuea[0] == 'Events'){
+                $string_elem_padre .= ',{"id":"'.$id_eventos.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
+                for ($u=0; $u < count($json_sender_eventos); $u++) { 
+                    if($u != 0){
+                        $string_f_eventos.=",".$json_sender_eventos[$u];
+                    }else{
+                        $string_f_eventos = '"children"'.":"."[".$json_sender_eventos[$u];
+                    }
+                }
+                if($string_f_eventos == (string) NULL){
+                    $string_elem_padre .= $string_f_eventos."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_eventos."]}";
                 }
             }
         }
@@ -724,7 +776,7 @@
     function crear_array_hijos_jsmind_CLUSTER($hijos,$id){
         $json_sender_data = array();
         $ind_padre = $id;
-        if(is_array($hijos) == TRUE and count($hijos)>1){
+        if(is_array($hijos) == TRUE and count($hijos)>=1){
             for ($w=0; $w < count($hijos); $w++) {
                 if($w != 0){
                     $ind_padre = $ind_padre+50;
@@ -774,7 +826,6 @@
                 } 
     
             }
-            //print_format($json_sender_data);
             return $json_sender_data; 
         }else{
             return $json_sender_data; 
