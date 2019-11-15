@@ -53,6 +53,7 @@
             <v-flex md1>
             </v-flex>
             <v-flex md8>
+                <div id="jsmind_import"></div>
                 <div id="main"></div>
             </v-flex>
         </v-layout>
@@ -194,12 +195,20 @@ export default {
             var currentObj = this;
             var archv_formulario = document.getElementById('xmlfile_load');
             var files = archv_formulario.files;
+            var id_container = currentObj.crearDiv_import();
+            var options = {
+            container:id_container,
+            editable:true,
+            theme:'primary'
+            }
+
             if(files.length > 0){
                 var file_data = files[0];
                 jsMind.util.file.read(file_data,function(jsmind_data, jsmind_name){
                     var mind = jsMind.util.json.string2json(jsmind_data);
                     if(!!mind){
-                        currentObj.data.show(mind);
+                        jsMind.show(options,mind);
+                        //currentObj.data.show(mind);
                     }else{
                         prompt_info('No se puede abrir el archivo como Mindmap');
                     }
@@ -281,6 +290,26 @@ export default {
                 return b;
             }
 
+        },
+        crearDiv_import(){
+            let currentObj = this;
+            var c = document.getElementById("jsmind_import").getElementsByTagName("div").length;
+            var x =  document.getElementById("jsmind_import").getElementsByTagName('div');
+            var div = document.createElement("div");
+            div.style.width = "750px";
+            div.style.height = "450px";
+            div.style.border = "solid 1px #ccc";
+            div.style.background = "#f4f4f4";
+            var id = c+1;
+            div.id = "jsmind_container_import"+id;
+            var id_btn = div.id;   
+            var q = document.createElement("br");
+            document.getElementById("jsmind_import").appendChild(q);
+            document.getElementById("jsmind_import").appendChild(div);
+            document.getElementById("jsmind_import").appendChild(document.createElement("br"));
+            document.getElementById("jsmind_import").appendChild(document.createElement("br"));
+            document.getElementById("jsmind_import").appendChild(document.createElement("br"));
+            return div.id;
         },
     }
 }

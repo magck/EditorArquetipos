@@ -12,7 +12,7 @@
     </head>
     <body>
             <div id="app">
-              <example-component></example-component>
+              <barranav-component></barranav-component>
             <div>
             <div id="app"> <!--La equita id debe ser app-->
                 <homepage-component></homepage-component><!--Añadimos nuestro componente vuejs-->

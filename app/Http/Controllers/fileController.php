@@ -299,7 +299,7 @@ class fileController extends Controller
                     $array_data = array();
                 }
         
-                //Si tengo State
+                //Si tengo State o data xD
                 if($def_2 != NULL and $short_def_2 != NULL and $def_2_name != NULL){
                     $array_state = $this->recorrer_xml_OBSERVATION($busca_it[0]->attributes[0]->children->attributes->children[0]->attributes[1]->children->attributes,count($short_def_2));
                 }else{
@@ -1230,27 +1230,42 @@ class fileController extends Controller
     function crear_array_hijos_jsmind_EVALUATION($hijos,$id){
         $json_sender_data = array();
         $ind_padre = $id;
-        if(is_array($hijos) == TRUE and count($hijos)>1){
+        if(is_array($hijos) == TRUE and count($hijos)>=1){
             for ($w=0; $w < count($hijos); $w++) {
                 if($w != 0){
                     $ind_padre = $ind_padre+50;
                     if(is_array($hijos[$w]) == TRUE){
                         $array_con_hijos = $hijos[$w];
                         $tmp_array_con_hijos = array();
-                        $padre_array_con_hijos = $array_con_hijos[0];
+                        $padre_array_con_hijos = explode("&&&",$array_con_hijos[0]);
                         for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
                             $ind_hijos = $ind_padre + $q;
                             if ($q != 0) {
-                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+                                $array_con_hijos_explode = explode("&&&",$array_con_hijos[$q]); //funcion explode para separar un string
+                                if(count($array_con_hijos_explode) == 2 ){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos_explode[0],"description"=>$array_con_hijos_explode[1]));
+                                }elseif(count($array_con_hijos_explode)==3){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos_explode[0],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2]));
+                                }elseif(count($array_con_hijos_explode) == 4){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos_explode[0],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2],"source"=>$array_con_hijos_explode[3]));
+                                }
                             }
                         }
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                        if(count($padre_array_con_hijos) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"source"=>$padre_array_con_hijos[3],"children"=>$tmp_array_con_hijos)));
+                        }
                     }else{
                         $explode_string = explode("&&&",$hijos[$w]);
                         if(count($explode_string) == 2){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
                         }elseif(count($explode_string) == 3){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }elseif(count($explode_string) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2],"source"=>$explode_string[3])));
                         }
                         //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
@@ -1258,22 +1273,37 @@ class fileController extends Controller
                     if(is_array($hijos[$w]) == TRUE){
                         $array_con_hijos = $hijos[$w];
                         $tmp_array_con_hijos = array();
-                        $padre_array_con_hijos = $array_con_hijos[0];
+                        $padre_array_con_hijos = explode("&&&",$array_con_hijos[0]);
                         for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
                             $ind_hijos = $ind_padre + $u;
                             if ($u != 0) {
-                                $valor_d = explode(",",$array_con_hijos[$u]);
-                                //print_format($array_con_hijos);
-                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
+                                $array_con_hijos_explode = explode("&&&",$array_con_hijos[$u]); //funcion explode para separar un string
+                                if(count($array_con_hijos_explode) == 2 ){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos_explode[0],"description"=>$array_con_hijos_explode[1]));
+                                }elseif(count($array_con_hijos_explode)==3){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos_explode[0],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2]));
+                                }elseif(count($array_con_hijos_explode) == 4){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos_explode[0],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2],"source"=>$array_con_hijos_explode[3]));
+                                }
                             }
                         }
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                        //ESTOS IF SON PARA EL TITULO DEL PADRE DE LOS HIJOS DE ARRIBA
+                        if(count($padre_array_con_hijos) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"source"=>$padre_array_con_hijos[3],"children"=>$tmp_array_con_hijos)));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                     }else{
                         $explode_string = explode("&&&",$hijos[$w]);
                         if(count($explode_string) == 2){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
                         }elseif(count($explode_string) == 3){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }elseif(count($explode_string) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2],"source"=>$explode_string[3])));
                         }
                         //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
@@ -1292,11 +1322,15 @@ class fileController extends Controller
         //$json_sender_data = array();
         $nodo_root = $padres[0];
         $padre_explode = explode("&&&",$nodo_root);
+        //$string_nodo_root = (string) NULL;
         if(count($padre_explode) == 2){
             $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","children":[';
         }elseif(count($padre_explode) == 3){
-            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":'.$padre_explode[2].',"children":[';
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":"'.$padre_explode[2].'","children":[';
+        }elseif(count($padre_explode) == 4){
+            $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":"'.$padre_explode[2].'","source":"'.$padre_explode[3].'","children":[';   
         }
+
         //$string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
         $string_f = (string) NULL; 
         $string_f_p = (string) NULL;
@@ -1405,6 +1439,7 @@ class fileController extends Controller
         }elseif($dir == "left"){
             $dir_2 = "right";
         }
+
         $nodo_root = $padres[0];
         $padre_explode = explode("&&&",$nodo_root);
         if(count($padre_explode) == 2){
@@ -1413,10 +1448,12 @@ class fileController extends Controller
             $string_nodo_root = '{"id":"root","topic":"'.$padre_explode[0].'","description":"'.$padre_explode[1].'","comment":"'.$padre_explode[2].'","children":[';
         }
         //$string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
-        $string_f = (string) NULL; 
-        $string_f_pathway = (string) NULL;
+        $string_f_data = (string) NULL; 
         $string_f_protocol = (string) NULL;
         $string_f_eventos = (string) NULL;
+        $string_f_state = (string) NULL;
+
+        //data a veces toma state depende del arquetipo,eventos,protocol,state
         //DATA
         $id_pathway = 1000;
         $json_sender_data = $this->crear_array_hijos_jsmind_CLUSTER($array_data,$id_pathway+1);
@@ -1426,64 +1463,69 @@ class fileController extends Controller
         //print_format($array_protocol);
         //print_format($json_sender_protocol);
         //Events 
-        $id_eventos = 70000;
+        $id_eventos = 50000;
         $json_sender_eventos = $this->crear_array_hijos_jsmind_CLUSTER($array_events,$id_eventos+1);
         //STATE
-        $id_state = 50000;
+        $id_state = 70000;
         $json_sender_state = $this->crear_array_hijos_jsmind_CLUSTER($array_state,$id_state+1);
 
         $padres_split = array_chunk($padres, 1);
         unset($padres_split[0]); //sacamos el nodo root 
         $string_elem_padre = (string) NULL; //string final
+        $yjhi = array();
+        $bandera_tipos = FALSE;
         foreach ($padres_split as $keya => $valuea) {
-            $elemento = '"'.$valuea[0].'"'; //puede tomar protocol, data,state,events
-            if($valuea[0] == 'data'){
+            array_push($yjhi,$keya);
+            $elemento = '"'.$valuea[0].'"';
+            if($valuea[0] == 'data' and $keya ==4){
+                $string_elem_padre .= ',{"id":"'.$id_state.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
+                    for ($j=0; $j < count($json_sender_state); $j++) { 
+                        if($j != 0){
+                            $string_f_data .= ",".$json_sender_state[$j];
+                        }else{
+                            $string_f_data = '"children"'.":"."[".$json_sender_state[$j];
+                        }
+                    }
+                    if($string_f_data == (string) NULL){
+                        $string_elem_padre .= $string_f_data."}";
+                    }else{
+                        $string_elem_padre .= ",".$string_f_data."]}";
+                    }
+                    $string_f_data = (string) NULL;
+            } 
+            if($valuea[0] == 'data' and $keya ==1){
                 $string_elem_padre .= '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
                 for ($y=0; $y < count($json_sender_data); $y++) { 
                     if($y != 0){
-                        $string_f_pathway .= ",".$json_sender_data[$y];
+                        $string_f_data .= ",".$json_sender_data[$y];
                     }else{
-                        $string_f_pathway = '"children"'.":"."[".$json_sender_data[$y];
+                        $string_f_data = '"children"'.":"."[".$json_sender_data[$y];
                     }
                 }
-                if($string_f_pathway == (string) NULL){
-                    $string_elem_padre .= $string_f_pathway."}";
+                if($string_f_data == (string) NULL){
+                    $string_elem_padre .= $string_f_data."}";
                 }else{
-                    $string_elem_padre .= ",".$string_f_pathway."]}";
+                    $string_elem_padre .= ",".$string_f_data."]}";
                 }
             }
-            
-            if($valuea[0] == 'state'){
-                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
-                for ($t=0; $t < count($json_sender_state); $t++) { 
-                    if($t != 0){
-                        $string_f_protocol .= ",".$json_sender_state[$t];
+            if($valuea[0] == "offset" and $keya ==1){
+                $string_elem_padre .= '{"id":"'.$id_eventos.'","topic":"Events","direction":"'.$dir_2.'"';
+                for ($u=0; $u < count($json_sender_eventos); $u++) { 
+                    if($u != 0){
+                        $string_f_eventos.=",".$json_sender_eventos[$u];
                     }else{
-                        $string_f_protocol = '"children"'.":"."[".$json_sender_state[$t];
+                        $string_f_eventos = '"children"'.":"."[".$json_sender_eventos[$u];
                     }
                 }
-                if($string_f_protocol == (string) NULL){
-                    $string_elem_padre .= $string_f_protocol."}";
+                if($string_f_eventos == (string) NULL){
+                    $string_elem_padre .= $string_f_eventos."}";
                 }else{
-                    $string_elem_padre .= ",".$string_f_protocol."]}";
+                    $string_elem_padre .= ",".$string_f_eventos."]}";
                 }
+                $bandera_tipos = TRUE;
             }
-            if($valuea[0] == 'protocol'){
-                $string_elem_padre .= ',{"id":"'.$id_state.'","topic":'.$elemento.',"direction":"'.$dir.'"';
-                for ($i=0; $i < count($json_sender_protocol); $i++) { 
-                    if($i != 0){
-                        $string_f.=",".$json_sender_protocol[$i];
-                    }else{
-                        $string_f = '"children"'.":"."[".$json_sender_protocol[$i];
-                    }
-                }
-                if($string_f == (string) NULL){
-                    $string_elem_padre .= $string_f."}";
-                }else{
-                    $string_elem_padre .= ",".$string_f."]}";
-                }
-            }
-            if($valuea[0] == 'Events'){
+
+            if($valuea[0] == 'Events'  and $keya ==2 and $bandera_tipos == FALSE){
                 $string_elem_padre .= ',{"id":"'.$id_eventos.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
                 for ($u=0; $u < count($json_sender_eventos); $u++) { 
                     if($u != 0){
@@ -1498,7 +1540,40 @@ class fileController extends Controller
                     $string_elem_padre .= ",".$string_f_eventos."]}";
                 }
             }
+
+            if($valuea[0] == 'protocol'  and $keya ==3){
+                $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"'.$dir.'"';
+                for ($i=0; $i < count($json_sender_protocol); $i++) { 
+                    if($i != 0){
+                        $string_f_protocol.=",".$json_sender_protocol[$i];
+                    }else{
+                        $string_f_protocol = '"children"'.":"."[".$json_sender_protocol[$i];
+                    }
+                }
+                if($string_f_protocol == (string) NULL){
+                    $string_elem_padre .= $string_f_protocol."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_protocol."]}";
+                }
+            }
+            if($valuea[0] == 'state' and $keya ==4){
+                $string_elem_padre .= ',{"id":"'.$id_state.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
+                for ($t=0; $t < count($json_sender_state); $t++) { 
+                    if($t != 0){
+                        $string_f_state .= ",".$json_sender_state[$t];
+                    }else{
+                        $string_f_state = '"children"'.":"."[".$json_sender_state[$t];
+                    }
+                }
+                if($string_f_state == (string) NULL){
+                    $string_elem_padre .= $string_f_state."}";
+                }else{
+                    $string_elem_padre .= ",".$string_f_state."]}";
+                }
+            }
+
         }
+
         if($string_elem_padre == (string) NULL){
             $string_nodo_root .= $attributo;
             $string_nodo_root .= ",".$descripcion."]}";
@@ -1517,6 +1592,18 @@ class fileController extends Controller
         }
         return $string_nodo_root;
         //$string_nodo_root .= $string_elem_padre."]}";
+    }
+    function crear_data($id_pathway,$elemento,$dir_2,$json_sender_data){
+        $string_f_pathway = (string) NULL;
+        $string_elem_padre = '{"id":"'.$id_pathway.'","topic":'.$elemento.',"direction":"'.$dir_2.'"';
+            for ($y=0; $y < count($json_sender_data); $y++) { 
+                if($y != 0){
+                    $string_f_pathway .= ",".$json_sender_data[$y];
+                }else{
+                    $string_f_pathway = '"children"'.":"."[".$json_sender_data[$y];
+                }
+            }
+        return $string_f_pathway;
     }
 //
 //

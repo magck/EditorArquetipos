@@ -1,6 +1,8 @@
 <template>
+<v-app>
     <div id="jsmind_container">
     </div>
+</v-app>
 </template>
 <script>
 //import jsMind from 'jsmind';
@@ -44,3 +46,6 @@ export default{
 }
 
 </script>
+<style lang="scss">
+    @import '../../../node_modules/vuetify/src/styles/main';
+</style>

@@ -10,7 +10,7 @@
               <v-list>
                 <v-list-item v-for="(item, i) in items" :key="i" >
                   <!--@click="" -->
-                  <v-btn color="blue lighten-2" dark :href="item.urls">{{ item.title }}</v-btn>
+                  <v-btn color="blue lighten-2"  :href="item.urls">{{ item.title }}</v-btn>
                   
                 </v-list-item>
               </v-list>
@@ -22,7 +22,6 @@
         <v-btn icon> <v-icon>mdi-magnify</v-icon> </v-btn>
         <v-btn icon> <v-icon>mdi-dots-vertical</v-icon></v-btn>
       </v-toolbar>
-
 </template>
 
 <script>
