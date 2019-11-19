@@ -165,20 +165,22 @@ class fileController extends Controller
                 $def_attributes = count($busca_it[0]->attributes);
                 $def_1 = NULL;$def_2 = NULL;
                 try {
-                    if($def_attributes>=2){ //si tengo data y protocol
-                        $def_1 = $busca_it[0]->attributes[0]->children->attributes->children;
-                        $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
-                        $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;
-                        $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
-                    }
-                } catch (Exception $e) {
+                    $def_1 = $busca_it[0]->attributes[0]->children->attributes->children;
+                    $def_1_name =(string) $busca_it[0]->attributes[0]->rm_attribute_name;
+                } catch (\Exception $e) {
                     $def_1 = NULL;
-                    $def_2 = NULL;
+                    $def_1_name = NULL;
                 }
-                
+                try {
+                    $def_2 = $busca_it[0]->attributes[1]->children->attributes->children;
+                    $def_2_name =(string) $busca_it[0]->attributes[1]->rm_attribute_name;
+                } catch (\Exception $th) {
+                    $def_2 = NULL;
+                    $def_2_name = NULL;
+                }
                 //FOR DATA
-                if($def_1 != NULL and $def_2 != NULL){
-                    $tmp_id = [];
+                if($def_1 != NULL){
+                    $tmp_id = array();
                     for ($i=0; $i < count($def_1); $i++) { 
                         $nombre = (string)$busca_it[0]->attributes[0]->children->attributes->children[$i]->rm_type_name; //todos los hijos de data,hasta children[$i] es cluster
                         $id = $busca_it[0]->attributes[0]->children->attributes->children[$i]->node_id ; //id de hijos de data
@@ -190,6 +192,10 @@ class fileController extends Controller
                             $tmp_id[(string)$id] = $nombre;
                         }
                     }    
+                }else{
+                    $tmp_id = array();
+                }
+                if ($def_2 != NULL) {
                     //FOR PROTOCOL
                     $tmp_pro= array();//AGREGUE ESTE FOR
                     for ($h=0; $h < count($def_2); $h++) { 
@@ -204,12 +210,8 @@ class fileController extends Controller
                         }
                         
                     }
-
                 }else{
-                    return response()->json([
-                        'status' => 'error',
-                        'msg' => 'Arquetipo imposible de procesar',
-                    ],400);
+                    $tmp_pro = array();
                 }
                 //CONEXION ID->ATTRIBUTE
                 list($aTrama,$aTrama1) =$this->buscar_item_2($xml,'en',$concept);
@@ -1223,8 +1225,9 @@ class fileController extends Controller
         $meta = $this->crear_meta_jsmind($nombre_a,"importe_editor","1.0");
         $format = $this->crear_format_jsmind("node_tree");
         $hijos = $this->crear_data_hijos_jsmind_EVALUATION($aData,$aData1,$aData2,$dir,$description_arquetipo,$attribution_arquetipo);
-        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
-        return $string_mind;
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}'; //ESTE SE RETORNABA ANTES
+        $string_replace = preg_replace("/[\r\n|\n|\r]+/", " ", $string_mind);
+        return $string_replace;
     }
 
     function crear_array_hijos_jsmind_EVALUATION($hijos,$id){
@@ -1362,7 +1365,7 @@ class fileController extends Controller
                     $string_elem_padre .= ",".$string_f."]}"; 
                 }
             }
-            else{
+            if($valuea[0] == 'protocol'){
                 $string_elem_padre .= ',{"id":"'.$id_protocol.'","topic":'.$elemento.',"direction":"left"';
                 for ($x=0; $x < count($json_sender_protocol); $x++) { 
                     if($x != 0){
