@@ -107,10 +107,6 @@ class fileController extends Controller
                     $array_pathway = $this->array_values_recursive($this->match($array_pathway,$aTrama));
                 }else{
                     $array_pathway = array();
-                    /*return response()->json([
-                        'status' => 'error',
-                        'msg' => 'Arquetipo no contiene PATHWAY',
-                    ],400);*/
                 }
                 if( $array_protocol != NULL){
                     $array_protocol = $this->array_values_recursive($this->match($array_protocol,$aTrama));
@@ -162,7 +158,6 @@ class fileController extends Controller
                 $concept = (string)$this->parser($xml)->xpath('//a:concept')[0];
                 $busca_it = $this->parser($xml)->xpath('//a:definition');
                 $busca_term_definition = $this->parser($xml)->xpath('//a:term_definitions');
-                $def_attributes = count($busca_it[0]->attributes);
                 $def_1 = NULL;$def_2 = NULL;
                 try {
                     $def_1 = $busca_it[0]->attributes[0]->children->attributes->children;
@@ -971,11 +966,11 @@ class fileController extends Controller
                         $nodo_id_2 = array_key_exists($llave,$aTrama);
                         if($nodo_id_2 != FALSE){
                             $valor_actual_data_2 = $aTrama[$llave];
-                            $tmp_id[$key][$llave] = $valor_actual_data_2;
+                            $tmp_id[$key][$llave] = $tmp_id[$key][$llave]."####".$valor_actual_data_2;
                         }
                     }
                 }else{
-                    $tmp_id[$key] =  $aTrama[$key];
+                    $tmp_id[$key] = $tmp_id[$key]."####".$aTrama[$key];
                 }
 
             }
@@ -1042,50 +1037,83 @@ class fileController extends Controller
                     if(is_array($hijos[$w]) == TRUE){
                         $array_con_hijos = $hijos[$w];
                         $tmp_array_con_hijos = array();
-                        $padre_array_con_hijos = $array_con_hijos[0];
+                        $padre_array_con_hijos = explode("&&&",$array_con_hijos[0]);
                         for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
                             $ind_hijos = $ind_padre + $q;
                             if ($q != 0) {
-                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+                                $array_con_hijos_explode = explode("&&&",$array_con_hijos[$q]); //funcion explode para separar un string
+                                $topic = explode("####",$array_con_hijos_explode[0]);//explode para el tipo de dato
+                                if(count($array_con_hijos_explode) == 2 ){ //"topic"=>$array_con_hijos_explode[0]
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"datatype"=>$topic[0],"topic"=>$topic[1],"description"=>$array_con_hijos_explode[1]));
+                                }elseif(count($array_con_hijos_explode)==3){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"datatype"=>$topic[0],"topic"=>$topic[1],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2]));
+                                }elseif(count($array_con_hijos_explode) == 4){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"datatype"=>$topic[0],"topic"=>$topic[1],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2],"source"=>$array_con_hijos_explode[3]));
+                                }
                             }
                         }
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                        $aTopic = explode("####",$padre_array_con_hijos[0]); // hacemos explode para obtener el tipo de dato
+                        if(count($padre_array_con_hijos) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic[0],"topic"=>$aTopic[1],"description"=>$padre_array_con_hijos[1],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic[0],"topic"=>$aTopic[1],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic[0],"topic"=>$aTopic[1],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"source"=>$padre_array_con_hijos[3],"children"=>$tmp_array_con_hijos)));
+                        }
                     }else{
                         $explode_string = explode("&&&",$hijos[$w]);
+                        $aTopic2 = explode("####",$explode_string[0]);
                         if(count($explode_string) == 2){
-                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic2[0],"topic"=>$aTopic2[1],"description"=>$explode_string[1])));
                         }elseif(count($explode_string) == 3){
-                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic2[0],"topic"=>$aTopic2[1],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }elseif(count($explode_string) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic2[0],"topic"=>$aTopic2[1],"description"=>$explode_string[1],"comment"=>$explode_string[2],"source"=>$explode_string[3])));
                         }
-                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 }else{
                     if(is_array($hijos[$w]) == TRUE){
                         $array_con_hijos = $hijos[$w];
                         $tmp_array_con_hijos = array();
-                        $padre_array_con_hijos = $array_con_hijos[0];
+                        $padre_array_con_hijos = explode("&&&",$array_con_hijos[0]);
                         for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
                             $ind_hijos = $ind_padre + $u;
                             if ($u != 0) {
-                                $valor_d = explode(",",$array_con_hijos[$u]);
-                                //print_format($array_con_hijos);
-                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
+                                $array_con_hijos_explode = explode("&&&",$array_con_hijos[$u]); //funcion explode para separar un string
+                                $aTopic3 = explode("####",$array_con_hijos_explode[0]);
+                                if(count($array_con_hijos_explode) == 2 ){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"datatype"=>$aTopic3[0],"topic"=>$aTopic3[1],"description"=>$array_con_hijos_explode[1]));
+                                }elseif(count($array_con_hijos_explode)==3){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"datatype"=>$aTopic3[0],"topic"=>$aTopic3[1],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2]));
+                                }elseif(count($array_con_hijos_explode) == 4){
+                                    array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"datatype"=>$aTopic3[0],"topic"=>$aTopic3[1],"description"=>$array_con_hijos_explode[1],"comment"=>$array_con_hijos_explode[2],"source"=>$array_con_hijos_explode[3]));
+                                }
                             }
                         }
-                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                        //ESTOS IF SON PARA EL TITULO DEL PADRE DE LOS HIJOS DE ARRIBA
+                        $aTopic4 = explode("####",$padre_array_con_hijos[0]);
+                        if(count($padre_array_con_hijos) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic4[0],"topic"=>$aTopic4[1],"description"=>$padre_array_con_hijos[1],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic4[0],"topic"=>$aTopic4[1],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"children"=>$tmp_array_con_hijos)));
+                        }elseif(count($padre_array_con_hijos) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic4[0],"topic"=>$aTopic4[1],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"source"=>$padre_array_con_hijos[3],"children"=>$tmp_array_con_hijos)));
+                        }
+
                     }else{
                         $explode_string = explode("&&&",$hijos[$w]);
+                        $aTopic5 = explode("####",$explode_string[0]);
                         if(count($explode_string) == 2){
-                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic5[0],"topic"=>$aTopic5[1],"description"=>$explode_string[1])));
                         }elseif(count($explode_string) == 3){
-                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic5[0],"topic"=>$aTopic5[1],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }elseif(count($explode_string) == 4){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"datatype"=>$aTopic5[0],"topic"=>$aTopic5[1],"description"=>$explode_string[1],"comment"=>$explode_string[2],"source"=>$explode_string[3])));
                         }
-                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 } 
     
             }
-            //print_format($json_sender_data);
             return $json_sender_data; 
         }else{
             return $json_sender_data; 
@@ -1270,7 +1298,6 @@ class fileController extends Controller
                         }elseif(count($explode_string) == 4){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2],"source"=>$explode_string[3])));
                         }
-                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 }else{
                     if(is_array($hijos[$w]) == TRUE){
@@ -1298,7 +1325,6 @@ class fileController extends Controller
                         }elseif(count($padre_array_con_hijos) == 4){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos[0],"description"=>$padre_array_con_hijos[1],"comment"=>$padre_array_con_hijos[2],"source"=>$padre_array_con_hijos[3],"children"=>$tmp_array_con_hijos)));
                         }
-                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
                     }else{
                         $explode_string = explode("&&&",$hijos[$w]);
                         if(count($explode_string) == 2){
@@ -1308,7 +1334,6 @@ class fileController extends Controller
                         }elseif(count($explode_string) == 4){
                             array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2],"source"=>$explode_string[3])));
                         }
-                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
                     }
                 } 
     
