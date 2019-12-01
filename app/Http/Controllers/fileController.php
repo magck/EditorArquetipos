@@ -138,7 +138,7 @@ class fileController extends Controller
                     return response()->json([
                         'status' => 'error',
                         'msg' => $e->getMessage()
-                    ],400);
+                    ],201);
                 }
                 if($json_final != NULL){
                     return response()->json([
@@ -562,7 +562,7 @@ class fileController extends Controller
 
                 try {
                     $ide_description = 200;
-                    $hijos_description = $this->crear_array_hijos_jsmind_CLUSTER($array_hijos_description,$ide_description+1);
+                    $hijos_description = $this->crear_array_hijos_jsmind_for_Attibution_Description($array_hijos_description,$ide_description+1);
                     
                     $string_description = '{"id":"'.$ide_description.'","topic":"Description","direction":"right","children":[';
                     for ($e=0; $e < count($hijos_description); $e++) {
@@ -736,7 +736,7 @@ class fileController extends Controller
         array_push($array_hijos_attibution,$licencing);
         try {
             $id_attribution = 10000;
-            $hijos_attribution = $this->crear_array_hijos_jsmind_CLUSTER($array_hijos_attibution,$id_attribution+1);
+            $hijos_attribution = $this->crear_array_hijos_jsmind_for_Attibution_Description($array_hijos_attibution,$id_attribution+1);
             $string_attribution = '{"id":"'.$id_attribution.'","topic":"Attribution","direction":"right","children":[';
             for ($t=0; $t < count($hijos_attribution); $t++) {
                 if($t != 0){
@@ -750,6 +750,64 @@ class fileController extends Controller
             return NULL;
         }
         return $string_attribution;
+    }
+    function crear_array_hijos_jsmind_for_Attibution_Description($hijos,$id){
+        $json_sender_data = array();
+        $ind_padre = $id;
+        if(is_array($hijos) == TRUE and count($hijos)>=1){
+            for ($w=0; $w < count($hijos); $w++) {
+                if($w != 0){
+                    $ind_padre = $ind_padre+50;
+                    if(is_array($hijos[$w]) == TRUE){
+                        $array_con_hijos = $hijos[$w];
+                        $tmp_array_con_hijos = array();
+                        $padre_array_con_hijos = $array_con_hijos[0];
+                        for ($q=0; $q < count($array_con_hijos); $q++) { //recorremos el arreglo para guardar sus hijos
+                            $ind_hijos = $ind_padre + $q;
+                            if ($q != 0) {
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$q]));
+                            }
+                        }
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                    }else{
+                        $explode_string = explode("&&&",$hijos[$w]);
+                        if(count($explode_string) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                        }elseif(count($explode_string) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                    }
+                }else{
+                    if(is_array($hijos[$w]) == TRUE){
+                        $array_con_hijos = $hijos[$w];
+                        $tmp_array_con_hijos = array();
+                        $padre_array_con_hijos = $array_con_hijos[0];
+                        for ($u=0; $u < count($array_con_hijos); $u++) { //recorremos el arreglo para guardar sus hijos
+                            $ind_hijos = $ind_padre + $u;
+                            if ($u != 0) {
+                                $valor_d = explode(",",$array_con_hijos[$u]);
+                                //print_format($array_con_hijos);
+                                array_push($tmp_array_con_hijos,array('id'=>(string)$ind_hijos,"topic"=>$array_con_hijos[$u]));
+                            }
+                        }
+                        array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$padre_array_con_hijos,"children"=>$tmp_array_con_hijos)));
+                    }else{
+                        $explode_string = explode("&&&",$hijos[$w]);
+                        if(count($explode_string) == 2){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1])));
+                        }elseif(count($explode_string) == 3){
+                            array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$explode_string[0],"description"=>$explode_string[1],"comment"=>$explode_string[2])));
+                        }
+                        //array_push($json_sender_data,json_encode(array('id'=>(string)$ind_padre,"topic"=>$hijos[$w])));
+                    }
+                } 
+    
+            }
+            return $json_sender_data; 
+        }else{
+            return $json_sender_data; 
+        }
     }
     //FUNCION QUE JUNTA LAS 3 FUNCIONES Y RETORNA EL JSON FINAL para jsMind
     function crear_mind_jsmind($aData,$aData1,$aData2){ 
@@ -1745,9 +1803,4 @@ class fileController extends Controller
         }
     }
     //agregado datatype a evaluation,observation,cluster
-    
-
-}
-
-
-    
+}   

@@ -85,7 +85,7 @@
           <v-layout column align-center justify-center>
             <div class="headline white--text mb-4 text-center">Crear un arquetipo nunca fué tan fácil.</div>
             <em>Crea uno haciendo click en el siguiente link</em>
-            <v-btn class="mt-12" color="blue lighten-2" dark large href="/crearArquetipo">Crear</v-btn>
+            <v-btn class="mt-12" color="blue lighten-2" dark large href="/crear">Crear</v-btn>
           </v-layout>
         </v-parallax>
       </section>

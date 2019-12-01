@@ -29,7 +29,7 @@
         data: () => ({
       list : 0,
       items: [
-        { title: 'Crear Arquetipo' ,urls:'/crearArquetipo'},
+        { title: 'Crear Arquetipo' ,urls:'/crear'},
         { title: 'Importar Arquetipo',urls:'/importar' },
       ],
     }),

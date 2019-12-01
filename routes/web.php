@@ -16,7 +16,7 @@ Route::get('/', function () {
     return view('homepage');
 });
 Route::get('importar','filecontroller@index');
-Route::get('crearArquetipo','crearController@index');
+Route::get('crear','crearController@index');
 Route::post('process','fileController@guardar');
 Route::post('insertar','fileController@save_mongo');
 Route::get('pruebaxml','xmlController@index');//este es de pruebas  para xml luego borrar
