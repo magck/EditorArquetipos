@@ -2181,11 +2181,11 @@ __webpack_require__.r(__webpack_exports__);
           if (!!mind) {
             jsMind.show(options, mind); //currentObj.data.show(mind);
           } else {
-            prompt_info('No se puede abrir el archivo como Mindmap');
+            alert('No se puede abrir el archivo como Mindmap');
           }
         });
       } else {
-        prompt_info('Selecciona un archivo primero.');
+        alert('Selecciona un archivo primero.');
       }
       /*formulario.preventDefault();
       let currentObj = this
