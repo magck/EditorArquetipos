@@ -10,18 +10,19 @@
         <link href="{{asset('css/app.css')}}" rel="stylesheet"> 
         <link href="{{asset('bootstrap.js')}}" rel="stylesheet">
         <style type="text/css">
-            #jsmind_container{
-                width:800px;
+            #jsmind_import{
+                /*width:800px;
                 height:500px;
                 border:solid 1px #ccc;
-                /*background:#f4f4f4;*/
                 background:#f4f4f4;
+                background:#f4f4f4;
+                //visibility:hidden;*/
             }
         </style>
     </head>
     <body>
             <div id="app">
-              <example-component></example-component>
+              <barranav-component></barranav-component>
               <editor-component></editor-component>
             </div>
             <script src="{{asset('js/app.js')}}"></script> <!--Añadimos el js generado con webpack, donde se encuentra nuestro componente vuejs-->

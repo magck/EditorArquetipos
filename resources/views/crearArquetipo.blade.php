@@ -7,26 +7,15 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Editor De Arquetipos</title>
-        <style type="text/css">
-            #jsmind_container{
-                width:800px;
-                height:500px;
-                border:solid 1px #ccc;
-                /*background:#f4f4f4;*/
-                background:#f4f4f4;
-            }
-        </style>
-        <!--<link type="text/css" rel="stylesheet" href="sass/jsmind.css">
-        <script src="js/jsmind.js"></script>-->
-        <link href="{{asset('css/app.css')}}" rel="stylesheet">
-        <!--<link href="../../node_modules/jsmind/style/jsmind.css" rel="stylesheet">-->
-        <!--<link href="{{asset('bootstrap.js')}}" rel="stylesheet">-->
+        <link href="{{asset('css/app.css')}}" rel="stylesheet"> 
+        <link href="{{asset('bootstrap.js')}}" rel="stylesheet">
     </head>
     <body>
             <div id="app">
-              <example-component></example-component>
+              <barranav-component></barranav-component>
               <crear-component></crear-component>
             </div>
             <script src="{{asset('js/app.js')}}"></script> <!--Añadimos el js generado con webpack, donde se encuentra nuestro componente vuejs-->
-    </body>
+            <script src="{{asset('js/jsmind.js')}}" ></script>
+          </body>
 </html>

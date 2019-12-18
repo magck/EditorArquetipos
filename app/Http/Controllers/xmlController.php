@@ -10,4 +10,8 @@ class xmlController extends Controller
     {
         return view('xml_pruebas');
     }
+    public function prueba()
+    {
+        return view('prueba1');
+    }
 }

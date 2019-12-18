@@ -14,7 +14,7 @@
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
-                <v-btn color="red" text @click="snackbar = false">Close</v-btn>
+                <v-btn color="green" text @click="snackbar = false">Close</v-btn>
             </v-snackbar>
             </form>
             <v-subheader>Guardar en MongoDB </v-subheader>
@@ -28,7 +28,7 @@
                 <v-btn type="submit" id='guardar' color="success" dark large form="mongo_save">Guardar</v-btn>
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
-                <v-btn color="red" text @click="snackbar = false">Close</v-btn>
+                <v-btn color="green" text @click="snackbar = false">Close</v-btn>
             </v-snackbar>
             </form>
             <!-- -->
@@ -42,21 +42,20 @@
                 </label>
             </p>
             <v-btn type="submit" id='procesa' color="success" dark large form="form_file_load">Procesar</v-btn>
-            <v-btn color="success" dark large v-on:click="exportar">Exportar Data</v-btn>
+            <v-btn color="success" dark large v-on:click="abrirMindmap">Abrir jsMind Mindmap</v-btn>
             <!-- @click="snackbar = true" -->
             <v-snackbar v-model="snackbar" :multi-line="multiLine"> 
                 {{ text }} 
-                <v-btn color="red" text @click="snackbar = false">Close</v-btn>
+                <v-btn color="green" text @click="snackbar = false">Close</v-btn>
             </v-snackbar>
             </form>
             </v-flex>
             <v-flex md1>
             </v-flex>
             <v-flex md8>
-                <div id="jsmind_container">
-                </div>
+                <div id="jsmind_import"></div>
+                <div id="main"></div>
             </v-flex>
-
         </v-layout>
         </v-container>
     </v-app>
@@ -73,45 +72,20 @@ export default {
             text: '',
             data: '',
             nombre_arch_expor: '',
+            arquetipos_actuales: [],
         }
     },
-     /*  mounted(){
-     var mind = {
-    "meta":{
-        "name":"jsMind remote",
-        "author":"hizzgdev@163.com",
-        "version":"0.2"
-    },
-    "format":"node_tree",
-    "data":{"id":"root","topic":"jsMind","children":[
-        {"id":"easy","topic":"Easy","direction":"left","children":[
-            {"id":"easy1","topic":"Easy to show"},
-            {"id":"easy2","topic":"Easy to edit"},
-            {"id":"easy3","topic":"Easy to store"},
-            {"id":"easy4","topic":"Easy to embed"}
-        ]},
-        {"id":"open","topic":"Open Source","direction":"right","children":[
-            {"id":"open1","topic":"on GitHub"},
-            {"id":"open2","topic":"BSD License"}
-        ]},
-        {"id":"powerful","topic":"Powerful","direction":"right","children":[
-            {"id":"powerful1","topic":"Base on Javascript"},
-            {"id":"powerful2","topic":"Base on HTML5"},
-            {"id":"powerful3","topic":"Depends on you"}
-        ]},
-        {"id":"other","topic":"test node","direction":"left","children":[
-            {"id":"other1","topic":"I'm from local variable"},
-            {"id":"other2","topic":"I can do everything"}
-        ]}
-    ]}
-};
-                var options = {
-                    container:'jsmind_container',
-                    editable:true,
-                    theme:'primary'
-                }
-                var jm = jsMind.show(options,mind);
-    },*/
+/*      mounted(){
+    var mind = ;
+    var options = {
+        container:'main',
+        editable:true,
+        theme:'primary'
+    }
+    console.log(mind);
+    var jm = jsMind.show(options,mind);
+    }, 
+*/
     methods:{
         subirformulario(file){
             file.preventDefault();
@@ -177,33 +151,39 @@ export default {
                 let rspta = response.data;
                 currentObj.snackbar = true;
                 currentObj.text = rspta.msg;
-                let padre_jsmind = rspta.padre
-                /*
-                let hijos = rspta.hijos
-                let nodos_jsmind = rspta.nodos
-                let JSON_objs = JSON.parse(nodos_jsmind);
-                let nodos_hijo = [];
-
-                for (let index = 0; index < JSON_objs.data.length; index++) {
-                    nodos_hijo.push(JSON_objs.data[index]);
-                }
-
-                hijos.children = nodos_hijo;
-                padre_jsmind.children = [hijos];
-                */                    
+                let padre_jsmind = rspta.padre;
+                let nombre_archetype = rspta.nombre_archetype;
+                console.log(padre_jsmind);                
                 var mind = JSON.parse(padre_jsmind);
-                
+                var id_container = currentObj.crearDiv();
                 var options = {
-                    container:'jsmind_container',
+                    container:id_container,
                     editable:true,
                     theme:'primary'
                 }
-                currentObj.data = mind
-                var jm = jsMind.show(options,mind);
 
+                var jm = jsMind.show(options,mind);
+                jm.collapse_all();
+                currentObj.data = jm
+                var obj = {};
+                obj[id_container] = jm;
+                currentObj.arquetipos_actuales.push(obj);
 
             })
             .catch(function (error) {
+                //let mensaje_error = error.response.data.msg;
+                //currentObj.snackbar = true;
+                //currentObj.text = mensaje_error;
+                if(error.response.status == 422){
+                    var mensaje_error = error.response.data.message;
+                    currentObj.snackbar = true;
+                    currentObj.text = mensaje_error;
+                }else{
+                    var mensaje_error = error.response.data.msg;
+                    currentObj.snackbar = true;
+                    currentObj.text = mensaje_error;
+                }
+
                 console.log(error.message);
                 console.log(error.response.data);
                 console.log(error.response.status);
@@ -211,12 +191,42 @@ export default {
             })            
 
         },
-        exportar(formulario){
-            formulario.preventDefault();
+        abrirMindmap(formulario){
+            var currentObj = this;
+            var archv_formulario = document.getElementById('xmlfile_load');
+            var files = archv_formulario.files;
+            var id_container = currentObj.crearDiv_import();
+            var options = {
+            container:id_container,
+            editable:true,
+            theme:'primary'
+            }
+
+            if(files.length > 0){
+                var file_data = files[0];
+                jsMind.util.file.read(file_data,function(jsmind_data, jsmind_name){
+                    var mind = jsMind.util.json.string2json(jsmind_data);
+                    if(!!mind){
+                        jsMind.show(options,mind);
+                        //currentObj.data.show(mind);
+                    }else{
+                        alert('No se puede abrir el archivo como Mindmap');
+                    }
+                });
+            }else{
+                alert('Selecciona un archivo primero.')
+            }
+            /*formulario.preventDefault();
             let currentObj = this
-            var datos_exportar = currentObj.data
+            var mind_data = currentObj.data.get_data('node_array');
+            var mind_name = mind_data.meta.name;
+            var mind_str = jsMind.util.json.json2string(mind_data);
+            jsMind.util.file.save(mind_str,'text/jsmind',mind_name+'.json');
+            --
+            var datos_exportar = currentObj.data.get_data() //get data obtiene el mind del modelo jsmind 
+            var mind_string = jsMind.util.json.json2string(datos_exportar);
             var nombre_arquetipo = currentObj.nombre_arch_expor
-            var exportObj = datos_exportar
+            var exportObj = mind_string
             var exportName= nombre_arquetipo+"data"
             var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
             var downloadAnchorNode = document.createElement('a');
@@ -225,6 +235,81 @@ export default {
             document.body.appendChild(downloadAnchorNode); // required for firefox
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
+            */
+        },
+        crearDiv(id){
+            let currentObj = this;
+            var c = document.getElementById("main").getElementsByTagName('div').length;
+            var x =  document.getElementById("main").getElementsByTagName('div');
+            var div = document.createElement("div");
+            div.style.width = "750px";
+            div.style.height = "450px";
+            div.style.border = "solid 1px #ccc";
+            div.style.background = "#f4f4f4";
+            var id = c+1;
+            div.id = "jsmind_container"+id;
+            var id_btn = div.id;      
+            var boton = currentObj.crearBtn(id_btn,"Guardar",0);
+            var boton_exportar = currentObj.crearBtn(id_btn,"Exportar",1);
+            var q = document.createElement("br");
+            document.getElementById("main").appendChild(q);
+            document.getElementById("main").appendChild(div);
+            document.getElementById(div.id).appendChild(boton);
+            document.getElementById(div.id).appendChild(document.createElement("br"));
+            document.getElementById(div.id).appendChild(document.createElement("br"));
+            document.getElementById(div.id).appendChild(boton_exportar);
+            document.getElementById("main").appendChild(document.createElement("br"));
+            document.getElementById("main").appendChild(document.createElement("br"));
+            document.getElementById("main").appendChild(document.createElement("br"));
+            return div.id;
+        },
+        crearBtn(id_btn,texto,tipo){
+            var currentObj = this 
+            if(tipo == 0){
+                var b = document.createElement("button");
+                b.style.color = "white";
+                b.id = id_btn+"_button";
+                b.style.backgroundColor = "green";
+                b.innerHTML = texto;
+                b.onclick = function () {
+                    //ACA CODIGO PARA PASAR A PROCESARLO
+                };
+                return b;
+            }else{
+                var b = document.createElement("button");
+                b.style.color = "white";
+                b.id = id_btn+"_export";
+                b.style.backgroundColor = "green";
+                b.innerHTML = texto;
+                b.onclick = function () {
+                    var mind_data = currentObj.data.get_data('node_array');
+                    var mind_name = mind_data.meta.name;
+                    var mind_str = jsMind.util.json.json2string(mind_data);
+                    jsMind.util.file.save(mind_str,'text/jsmind',mind_name+'.json'); 
+                };
+                return b;
+            }
+
+        },
+        crearDiv_import(){
+            let currentObj = this;
+            var c = document.getElementById("jsmind_import").getElementsByTagName("div").length;
+            var x =  document.getElementById("jsmind_import").getElementsByTagName('div');
+            var div = document.createElement("div");
+            div.style.width = "750px";
+            div.style.height = "450px";
+            div.style.border = "solid 1px #ccc";
+            div.style.background = "#f4f4f4";
+            var id = c+1;
+            div.id = "jsmind_container_import"+id;
+            var id_btn = div.id;   
+            var q = document.createElement("br");
+            document.getElementById("jsmind_import").appendChild(q);
+            document.getElementById("jsmind_import").appendChild(div);
+            document.getElementById("jsmind_import").appendChild(document.createElement("br"));
+            document.getElementById("jsmind_import").appendChild(document.createElement("br"));
+            document.getElementById("jsmind_import").appendChild(document.createElement("br"));
+            return div.id;
         },
     }
 }
