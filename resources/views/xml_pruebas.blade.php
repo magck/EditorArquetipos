@@ -128,11 +128,8 @@
         }
     }
 
-
-    print "<pre>";
-    print_r($arreglo_nodos);
-    print "</pre>";
-    print "\n";
+    $aData1 = array_values($aData1);
+    $aData = array_values($aData);
     print "<pre>";
     print_r($aData);
     print "</pre>";
@@ -141,52 +138,69 @@
     print_r($aData1);
     print "</pre>";
     print "\n";
-    print "<pre>";
-    //print_r($busca_attribute_name);
-    print "</pre>";
-    print "\n";
-    print "<pre>";
-    //print_r($code_list);
-    print "</pre>";
-    print "\n";
+
+
     function crear_nodo($id,$parent_id,$isroot,$topic,$background_color,$direction){
-        return json_encode(array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction));
+        return array('id'=>$id,'parentid'=>$parent_id,'isroot'=>$isroot,'topic'=>$topic,'background-color'=>$background_color,'direction'=>$direction);
     }
     $meta=array('name'=>'archetype','author'=>'editor_import',"version"=>'0.1'); 
-    //$data= array("id"=>"root","isroot"=>true,"topic"=>"Gender");
-    //$data2 = array("id"=>"sub1","parentid"=>"root","Topic"=>"Data","background-color"=>"#0000ff");
-    echo crear_nodo("root","",true,"Gender","#0000ff","");
 
-    echo json_encode($meta);
-
-    //echo json_encode($data2);
-    /*
-    var mind = {
-        "meta":{
-            "name":"archetype",
-            "author":"editor_importe",
-            "version":"0.1",
-        },
-        "format":"node_array",
-        "data":[
-            {"id":"root", "isroot":true, "topic":"Gender"},
-
-            {"id":"sub1", "parentid":"root", "topic":"data", "background-color":"#0000ff"},
-            {"id":"sub11", "parentid":"sub1", "topic":"Administrative Gender"},
-            {"id":"sub12", "parentid":"sub1", "topic":"Legal Gender"},
-            {"id":"sub13", "parentid":"sub1", "topic":"Sex assigned at birth"},
-            {"id":"sub14", "parentid":"sub1","topic":"Gender Expression"},
-            {"id":"sub15", "parentid":"sub1","topic":"Gender Identity"},
-            {"id":"sub16", "parentid":"sub1","topic":"Preferred pronoun"},
-            {"id":"sub17", "parentid":"sub1","topic":"Aditional Details"},
-            {"id":"sub18", "parentid":"sub1","topic":"Comment"},
-
-            {"id":"sub19", "parentid":"root","topic":"Protocol","direction":"left"},
-            {"id":"sub20", "parentid":"sub19","topic":"Last Updated"},
-            {"id":"sub21", "parentid":"sub19","topic":"extension"},
-
-            {"id":"sub22", "parentid":"sub19", "topic":"sub22","foreground-color":"#33ff33"},
-
-        ]
+    function crear_meta_jsmind($nombre,$autor,$version){
+        $string_head = '"meta":{
+            "name":"'.$nombre.'",
+            "author":"'.$autor.'",
+            "version":"'.$version.'"
+        },';
+        return $string_head;
     }
-    */
+    function crear_format_jsmind($formato){
+        $string_format = '"format":"'.$formato.'",';
+        return $string_format;
+    }
+ 
+    crear_mind_jsmind($aData,$aData1);
+
+    function crear_mind_jsmind($aData,$aData1){
+        $meta = crear_meta_jsmind("archetype","importe_editor","1.0");
+        $format = crear_format_jsmind("node_tree");
+        $hijos = crear_data_hijos_jsmind($aData,$aData1,"right");
+        $string_mind = '{'.$meta.''.$format.'"data":'.$hijos.'}';
+        return $string_mind;
+    }
+
+    function crear_data_hijos_jsmind($hijos,$padres,$dir){ //funcion que crea los hijos de root (jsmind)
+        $json_sender = array();
+        $nodo_root = $padres[0];
+        $string_nodo_root = '{"id":"root","topic":"'.$nodo_root.'","children":[';
+        $string_f = (string) NULL; 
+        foreach ($hijos as $keyq => $valueq) {
+            $llave = (string) $keyq;
+            $valor = (string) $valueq;
+            array_push($json_sender,json_encode(array('id'=>'"'.$keyq.'"',"topic"=>$valueq)));
+        }
+        $padres_split = array_chunk($padres, 1);
+        unset($padres_split[0]);
+        $string_elem_padre = (string) NULL;
+        foreach($padres_split as $keya => $valuea){
+            $elemento = '"'.$valuea[0].'"';
+            $id_padre = '"'.$keya.'"';
+            if($valuea[0] == 'data'){
+                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'",';
+                for ($i=0; $i < count($json_sender); $i++) { 
+                    if($i != 0){
+                        $string_f.=",".$json_sender[$i];
+                    }else{
+                        $string_f = '"children"'.":"."[".$json_sender[$i];
+                    }
+                }
+                $string_elem_padre .= $string_f."]},";
+            }
+            else{
+                $string_elem_padre .= '{"id":'.$id_padre.',"topic":'.$elemento.',"direction":"'.$dir.'","children":""}]}';
+            }
+        }
+        $string_nodo_root .= $string_elem_padre;
+        return $string_nodo_root;
+    }
+
+

@@ -26,7 +26,7 @@
 </template>
 
 <script>
-    export default { 
+    export default {
         data: () => ({
       list : 0,
       items: [
